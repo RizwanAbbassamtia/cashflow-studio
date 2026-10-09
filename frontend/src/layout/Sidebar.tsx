@@ -7,7 +7,9 @@ import {
   Search,
   Settings,
   Tv,
-  type LucideIcon,, Film } from "lucide-react";
+  Film,
+  type LucideIcon,
+} from "lucide-react";
 import { NavLink } from "react-router";
 
 import { useSystemInfo } from "../api/system";
