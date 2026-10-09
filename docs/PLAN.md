@@ -187,7 +187,19 @@ One pull request per milestone.
 7. Arabic: Modern Standard Arabic or a dialect?
 8. Confirm the repository name `cashflow-studio`.
 
-## 10. Facts to re-verify before they are relied on
+## 10. Fact-check corrections folded in (2026-10-09, second pass)
+
+- **Paid consumer subscriptions do not include API access.** Google AI Pro/Ultra (Flow, Gemini app), ChatGPT Plus and Midjourney give no API quota, and Midjourney's terms ban automation. If the team's image or voice tool is a consumer subscription, the automated pipeline still needs an API plan for that provider, or the stage runs in `manual` mode with images imported by hand. This is the first thing to confirm (open question 1).
+- **Max plan API credit confirmed** on Anthropic's help centre (Max 5x $100/month, Max 20x $200/month; Team $20/$100 per seat). Constraints: the person linking the Console organisation must be the subscriber, one Console org per plan, credits do not roll over. Each teammate therefore needs their own Max plan and their own key.
+- **Safety-classifier refusals** (HTTP 200 with `stop_reason: refusal`) are a normal failure mode on current Claude models; the LLM layer uses the server-side fallback option and retries with a reworded prompt before surfacing an error.
+- **Disclosure flag must be set by the uploader.** FFmpeg re-encoding drops image-level C2PA metadata, so YouTube's auto-label will not fire from source images; the app sets the synthetic-media flag explicitly.
+- **Arabic and Hindi text in Pillow:** use `arabic-reshaper` + `python-bidi` (pure Python) instead of shipping `fribidi.dll`; FFmpeg drawtext needs libfreetype + libharfbuzz.
+- **Vision pass for thumbnail templates** uses the current Gemini text/vision model (gemini-3.8-flash on 2026-10-09) or Claude Sonnet 5.5, not an image-generation model.
+- **YouTube Data API (optional power-user key):** quota changed 2026-06-01 (100 search calls/day, separate buckets); new `videos.batchGetStats` costs 1 unit per call; thumbnails now go up to 1920x1080, 2560x1440 and 3840x2160 for some videos, which is useful for 4K thumbnail templates. yt-dlp remains the default engine.
+- **yt-dlp needs a JavaScript runtime** (Deno) for downloads and must be pinned together with `yt-dlp-ejs`; research-only calls worked without it in testing. Nothing is installed on this machine yet (no yt-dlp, Deno, Node).
+- **Distribution:** Inno Setup 7.1 is GA; the front end is built once in CI into static files served by FastAPI, so no Node runs on user laptops. Bundled FFmpeg: BtbN GPL build (has libx264) is acceptable for internal team distribution; revisit if the app is ever sold.
+
+## 11. Facts to re-verify before they are relied on
 
 - Anthropic Max plan monthly API credit (help centre, 2026-10-07) and the availability and pricing of Haiku 5.5.
 - Current wording of YouTube's monetisation policy page sections before hard-coding rule text.
