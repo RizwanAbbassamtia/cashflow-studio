@@ -178,7 +178,7 @@ One pull request per milestone.
 
 ## 9. Open questions (answer when convenient; M0 does not depend on them)
 
-1. Which voice-clone tool and which image tool does the team pay for, and do they have an API? This sets the first adapters. (You said you will share them.)
+1. Voice tool is "ai33" (named 2026-10-09; website link and API documentation still needed, the name could not be found online). Image tool is Google: the pipeline will use the Gemini image models through a Google API key, because the consumer Google AI subscription (Flow, Gemini app) has no API; confirm whether a Google Cloud / AI Studio key exists.
 2. Which Claude plan do users have (Max 5x, Max 20x, Pro)? Max plans carry the monthly API credit; Pro users would use the MCP mode.
 3. Which Google account owns the shared Drive folder, and is Google Drive for desktop installed on the laptops?
 4. How much RAM do the laptops have? (GPUs: none, confirmed 2026-10-09.)

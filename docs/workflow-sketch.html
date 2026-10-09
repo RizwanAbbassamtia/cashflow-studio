@@ -1,0 +1,855 @@
+<title>Cashflow Studio Workflow</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: a specification document. One reading column, numbered sections, figures with captions, spec sheets as tables. */
+  :root {
+    --bg: #EEF1F6;
+    --surface: #FFFFFF;
+    --fg: #121826;
+    --muted: #5A6478;
+    --line: #C3C9D6;
+    --accent: #9A6B00;
+    --accent-fill: #FFC000;
+    --accent-ink: #1B1500;
+    --soft: #E2E7F0;
+    --ok: #1E7F4F;
+    --warn: #9A6B00;
+    --bad: #B3261E;
+    --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0B1220; --surface: #121A2E; --fg: #E6EAF2; --muted: #94A0B8; --line: #2E3A58;
+      --accent: #FFC000; --accent-fill: #FFC000; --accent-ink: #1B1500; --soft: #1A2440;
+      --ok: #4CC38A; --warn: #FFC000; --bad: #F2857A;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0B1220; --surface: #121A2E; --fg: #E6EAF2; --muted: #94A0B8; --line: #2E3A58;
+    --accent: #FFC000; --accent-fill: #FFC000; --accent-ink: #1B1500; --soft: #1A2440;
+    --ok: #4CC38A; --warn: #FFC000; --bad: #F2857A;
+    color-scheme: dark;
+  }
+  body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.55; margin: 0; }
+  .wrap { max-width: 1060px; margin: 0 auto; padding-block: 36px 72px; padding-inline: 20px; }
+  .eyebrow { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  header h1 { font-size: 32px; font-weight: 600; letter-spacing: -0.01em; margin: 6px 0 8px; text-wrap: balance; }
+  header p { margin: 0; color: var(--muted); max-width: 74ch; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-top: 20px; }
+  .fact { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; }
+  .fact .k { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .fact .v { font-size: 14px; margin-top: 3px; }
+  nav.toc { margin-top: 26px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px 16px; }
+  nav.toc ol { columns: 2; column-gap: 28px; margin: 6px 0 0; padding-left: 20px; font-size: 14px; }
+  nav.toc li { margin: 2px 0; break-inside: avoid; }
+  nav.toc a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--line); }
+  nav.toc a:hover, nav.toc a:focus-visible { border-bottom-color: var(--accent); outline: none; }
+  @media (max-width: 640px) { nav.toc ol { columns: 1; } }
+  section { margin-top: 48px; }
+  h2 { font-size: 21px; font-weight: 600; margin: 4px 0 8px; text-wrap: balance; }
+  h3 { font-size: 16px; font-weight: 600; margin: 24px 0 6px; }
+  p.lead { margin: 0 0 14px; color: var(--muted); max-width: 76ch; }
+  p { max-width: 76ch; }
+  figure { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 14px 10px; overflow-x: auto; }
+  figure svg { display: block; width: 100%; height: auto; max-width: 100%; min-width: 640px; font-family: var(--font-body); }
+  figcaption { font-size: 13px; color: var(--muted); margin-top: 10px; max-width: 84ch; }
+  .mono { font-family: var(--font-mono); font-size: 0.92em; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  th { font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 500; background: var(--soft); }
+  td.n { font-family: var(--font-mono); color: var(--muted); width: 2ch; }
+  td.h, .human { color: var(--accent); }
+  td.k { font-family: var(--font-mono); font-size: 12.5px; white-space: nowrap; }
+  .spec { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin-top: 10px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+  .card h4 { margin: 0 0 8px; font-size: 14px; font-weight: 600; display: flex; align-items: baseline; gap: 10px; }
+  .card h4 .num { font-family: var(--font-mono); color: var(--muted); font-weight: 400; font-size: 12px; }
+  .card dl { margin: 0; display: grid; grid-template-columns: 92px 1fr; gap: 4px 10px; font-size: 13.5px; }
+  .card dt { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); padding-top: 3px; }
+  .card dd { margin: 0; min-width: 0; }
+  .card dd.human { color: var(--accent); }
+  ul.tight { margin: 4px 0 0; padding-left: 18px; }
+  ul.tight li { margin: 2px 0; }
+  ol.walk { padding-left: 22px; margin: 8px 0 0; max-width: 80ch; }
+  ol.walk li { margin: 6px 0; }
+  .gate { display: inline-block; width: 10px; height: 10px; background: var(--accent-fill); transform: rotate(45deg); margin: 0 6px 0 2px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 18px; font-size: 13px; color: var(--muted); margin: 14px 0 0; }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .legend i { display: inline-block; width: 26px; height: 0; border-top: 2px solid currentColor; }
+  .legend i.dash { border-top-style: dashed; }
+  .legend b { display: inline-block; width: 12px; height: 12px; background: var(--accent-fill); transform: rotate(45deg); }
+  pre.tree { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.5; overflow-x: auto; margin: 8px 0 0; }
+  .pill { display: inline-block; font-family: var(--font-mono); font-size: 11px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+  .pill.ok { color: var(--ok); border-color: var(--ok); }
+  .pill.warn { color: var(--warn); border-color: var(--warn); }
+  .pill.bad { color: var(--bad); border-color: var(--bad); }
+  .note { border-left: 3px solid var(--accent-fill); padding: 8px 14px; background: var(--surface); border-radius: 0 6px 6px 0; font-size: 14px; max-width: 80ch; margin-top: 12px; }
+  @media (max-width: 720px) { header h1 { font-size: 25px; } .card dl { grid-template-columns: 1fr; } }
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">Specification sketch · for review before further development</div>
+  <h1>Cashflow Studio Workflow</h1>
+  <p>How the system works from a list of competitor channels to a finished, exported video, with a person able to approve, edit or replace the result of every stage. Written for the whole team: editors, reviewers and developers.</p>
+  <div class="facts">
+    <div class="fact"><div class="k">Version</div><div class="v">v0.3 · 2026-10-09</div></div>
+    <div class="fact"><div class="k">Voice tool</div><div class="v">ai33 (link to be confirmed)</div></div>
+    <div class="fact"><div class="k">Image tool</div><div class="v">Google (Gemini image models)</div></div>
+    <div class="fact"><div class="k">Writing and checks</div><div class="v">Claude API (Opus 5.5, Sonnet 5.5)</div></div>
+    <div class="fact"><div class="k">Formats</div><div class="v">16:9 long-form and 9:16 Shorts · 720p, 1080p, 4K</div></div>
+    <div class="fact"><div class="k">Runs on</div><div class="v">Each editor's Windows laptop, no GPU needed</div></div>
+  </div>
+  <nav class="toc" aria-label="Contents">
+    <div class="eyebrow">Contents</div>
+    <ol>
+      <li><a href="#s1">The whole system on one page</a></li>
+      <li><a href="#s2">People, components and services</a></li>
+      <li><a href="#s3">One-time setup per channel</a></li>
+      <li><a href="#s4">One video, stage by stage</a></li>
+      <li><a href="#s5">Stage specifications</a></li>
+      <li><a href="#s6">The storyboard record</a></li>
+      <li><a href="#s7">Voice timing drives the edit</a></li>
+      <li><a href="#s8">Quality gates</a></li>
+      <li><a href="#s9">Three ways a video is finished</a></li>
+      <li><a href="#s10">Output formats and resolutions</a></li>
+      <li><a href="#s11">Languages</a></li>
+      <li><a href="#s12">Team setup, data and updates</a></li>
+      <li><a href="#s13">Where every file lives</a></li>
+      <li><a href="#s14">Keys, privacy and safety</a></li>
+      <li><a href="#s15">Review queue and batch runs</a></li>
+      <li><a href="#s16">Failures, retries and costs</a></li>
+      <li><a href="#s17">A single video as the editor sees it</a></li>
+      <li><a href="#s18">Delivery milestones</a></li>
+    </ol>
+  </nav>
+</header>
+
+<section id="s1">
+<div class="eyebrow">Section 1</div>
+<h2>The whole system on one page</h2>
+<p class="lead">Each editor runs the app on their own laptop. Channel data is shared through a synced Google Drive folder; media stays local; code and updates come from GitHub. Every video flows through eight stages, and every step between stages is a gate where a person can act.</p>
+<figure>
+<svg viewBox="0 0 1000 400" role="img" aria-label="Inputs on the left feed the Cashflow Studio app in the middle, which produces videos, thumbnails and a provenance bundle on the right; three stores below exchange data with the app." fill="none" stroke="currentColor" stroke-width="1.4">
+  <defs>
+    <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor" stroke="none"/></marker>
+  </defs>
+  <text x="24" y="52" font-size="12" fill="currentColor" stroke="none" font-weight="600">You provide (Channel Setup form, once per channel)</text>
+  <rect x="24" y="70" width="200" height="44" rx="4"/><text x="124" y="97" font-size="12.5" text-anchor="middle" fill="currentColor" stroke="none">Competitor channel URLs</text>
+  <rect x="24" y="124" width="200" height="44" rx="4"/><text x="124" y="151" font-size="12.5" text-anchor="middle" fill="currentColor" stroke="none">Frameworks: title, script, style</text>
+  <rect x="24" y="178" width="200" height="44" rx="4"/><text x="124" y="205" font-size="12.5" text-anchor="middle" fill="currentColor" stroke="none">Cloned voice (ai33)</text>
+  <rect x="24" y="232" width="200" height="44" rx="4"/><text x="124" y="259" font-size="12.5" text-anchor="middle" fill="currentColor" stroke="none">Image tool (Google)</text>
+  <line x1="224" y1="92" x2="300" y2="92" marker-end="url(#a1)"/>
+  <line x1="224" y1="146" x2="300" y2="146" marker-end="url(#a1)"/>
+  <line x1="224" y1="200" x2="300" y2="200" marker-end="url(#a1)"/>
+  <line x1="224" y1="254" x2="300" y2="254" marker-end="url(#a1)"/>
+  <rect x="300" y="60" width="400" height="240" rx="8" stroke-width="1.8"/>
+  <text x="500" y="86" font-size="14" text-anchor="middle" fill="currentColor" stroke="none" font-weight="600">Cashflow Studio on each laptop</text>
+  <rect x="316" y="106" width="84" height="28" rx="4"/><text x="358" y="124" font-size="11.5" text-anchor="middle" fill="currentColor" stroke="none">Research</text>
+  <rect x="412" y="106" width="84" height="28" rx="4"/><text x="454" y="124" font-size="11.5" text-anchor="middle" fill="currentColor" stroke="none">Title</text>
+  <rect x="508" y="106" width="84" height="28" rx="4"/><text x="550" y="124" font-size="11.5" text-anchor="middle" fill="currentColor" stroke="none">Script</text>
+  <rect x="604" y="106" width="84" height="28" rx="4"/><text x="646" y="124" font-size="11.5" text-anchor="middle" fill="currentColor" stroke="none">Storyboard</text>
+  <line x1="400" y1="120" x2="412" y2="120"/><line x1="496" y1="120" x2="508" y2="120"/><line x1="592" y1="120" x2="604" y2="120"/>
+  <polygon points="406,114 412,120 406,126 400,120" fill="var(--accent-fill)" stroke="none"/>
+  <polygon points="502,114 508,120 502,126 496,120" fill="var(--accent-fill)" stroke="none"/>
+  <polygon points="598,114 604,120 598,126 592,120" fill="var(--accent-fill)" stroke="none"/>
+  <polyline points="646,134 646,150 358,150 358,170" marker-end="url(#a1)"/>
+  <polygon points="502,144 508,150 502,156 496,150" fill="var(--accent-fill)" stroke="none"/>
+  <rect x="316" y="170" width="84" height="28" rx="4"/><text x="358" y="188" font-size="11.5" text-anchor="middle" fill="currentColor" stroke="none">Voice</text>
+  <rect x="412" y="170" width="84" height="28" rx="4"/><text x="454" y="188" font-size="11.5" text-anchor="middle" fill="currentColor" stroke="none">Images</text>
+  <rect x="508" y="170" width="84" height="28" rx="4"/><text x="550" y="188" font-size="11.5" text-anchor="middle" fill="currentColor" stroke="none">Edit</text>
+  <rect x="604" y="170" width="84" height="28" rx="4"/><text x="646" y="188" font-size="11.5" text-anchor="middle" fill="currentColor" stroke="none">Export</text>
+  <line x1="400" y1="184" x2="412" y2="184"/><line x1="496" y1="184" x2="508" y2="184"/><line x1="592" y1="184" x2="604" y2="184"/>
+  <polygon points="406,178 412,184 406,190 400,184" fill="var(--accent-fill)" stroke="none"/>
+  <polygon points="502,178 508,184 502,190 496,184" fill="var(--accent-fill)" stroke="none"/>
+  <polygon points="598,178 604,184 598,190 592,184" fill="var(--accent-fill)" stroke="none"/>
+  <text x="500" y="232" font-size="12" text-anchor="middle" fill="var(--accent)" stroke="none">every step passes a gate: auto · review · manual</text>
+  <text x="500" y="256" font-size="11.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">calls out to: Claude API · ai33 voice · Google images · FFmpeg (local)</text>
+  <text x="500" y="280" font-size="11.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">quality gates: originality, visual variety, voice consent, disclosure</text>
+  <text x="776" y="52" font-size="12" fill="currentColor" stroke="none" font-weight="600">You get (per video)</text>
+  <rect x="776" y="86" width="200" height="44" rx="4"/><text x="876" y="105" font-size="12.5" text-anchor="middle" fill="currentColor" stroke="none">Final video</text><text x="876" y="121" font-size="11" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">720p · 1080p · 4K, 16:9 or 9:16</text>
+  <rect x="776" y="146" width="200" height="44" rx="4"/><text x="876" y="165" font-size="12.5" text-anchor="middle" fill="currentColor" stroke="none">Thumbnail + SEO pack</text><text x="876" y="181" font-size="11" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">title, tags, description, chapters</text>
+  <rect x="776" y="206" width="200" height="44" rx="4"/><text x="876" y="225" font-size="12.5" text-anchor="middle" fill="currentColor" stroke="none">Provenance bundle</text><text x="876" y="241" font-size="11" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">research, versions, review log</text>
+  <line x1="700" y1="108" x2="776" y2="108" marker-end="url(#a1)"/>
+  <line x1="700" y1="168" x2="776" y2="168" marker-end="url(#a1)"/>
+  <line x1="700" y1="228" x2="776" y2="228" marker-end="url(#a1)"/>
+  <rect x="120" y="336" width="260" height="48" rx="4" stroke-dasharray="5 4"/>
+  <text x="250" y="356" font-size="12.5" text-anchor="middle" fill="currentColor" stroke="none">Shared Google Drive folder</text>
+  <text x="250" y="372" font-size="11" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">channel data, frameworks, voice samples, music</text>
+  <rect x="400" y="336" width="200" height="48" rx="4" stroke-dasharray="5 4"/>
+  <text x="500" y="356" font-size="12.5" text-anchor="middle" fill="currentColor" stroke="none">Local drive</text>
+  <text x="500" y="372" font-size="11" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">per-video projects, cache, exports</text>
+  <rect x="620" y="336" width="240" height="48" rx="4" stroke-dasharray="5 4"/>
+  <text x="740" y="356" font-size="12.5" text-anchor="middle" fill="currentColor" stroke="none">GitHub</text>
+  <text x="740" y="372" font-size="11" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">code, installer, automatic updates</text>
+  <line x1="300" y1="336" x2="340" y2="300" marker-start="url(#a1)" marker-end="url(#a1)"/>
+  <text x="290" y="326" font-size="10.5" text-anchor="end" fill="currentColor" stroke="none" opacity="0.75">reads and writes</text>
+  <line x1="500" y1="336" x2="500" y2="300" marker-start="url(#a1)" marker-end="url(#a1)"/>
+  <text x="508" y="326" font-size="10.5" fill="currentColor" stroke="none" opacity="0.75">reads and writes</text>
+  <line x1="720" y1="336" x2="680" y2="300" marker-end="url(#a1)"/>
+  <text x="730" y="326" font-size="10.5" fill="currentColor" stroke="none" opacity="0.75">installs, updates</text>
+</svg>
+<figcaption>Inputs are entered once per channel. Every video then flows through eight stages inside the app; the amber diamonds are the gates where a person can approve, edit or replace the result.</figcaption>
+</figure>
+<div class="legend">
+  <span><b></b> gate between stages: auto · review · manual</span>
+  <span><i></i> data flow</span>
+  <span><i class="dash"></i> service or store outside the app</span>
+</div>
+</section>
+
+<section id="s2">
+<div class="eyebrow">Section 2</div>
+<h2>People, components and services</h2>
+<p class="lead">Who and what takes part, and what each one is responsible for.</p>
+<table>
+  <thead><tr><th>Actor or component</th><th>Responsibility</th><th>Where it runs</th></tr></thead>
+  <tbody>
+    <tr><td>Editor</td><td>Creates videos, reviews stages, fixes storyboards and cuts, approves exports</td><td>Own laptop, in the app</td></tr>
+    <tr><td>Channel owner / reviewer</td><td>Sets up channels, frameworks and stage modes; final approvals; policy overrides with a logged reason</td><td>Own laptop, in the app</td></tr>
+    <tr><td>Desktop app</td><td>Dashboard, Channel Setup form, Research, Storyboard board, Timeline editor, Review queue, Settings</td><td>Native window on the laptop (web technology inside)</td></tr>
+    <tr><td>Pipeline engine</td><td>Runs the eight stages, enforces gates and quality checks, tracks state, costs and provenance per video</td><td>Local background service, started by the app</td></tr>
+    <tr><td>Research engine</td><td>Lists competitor videos, scores outliers, fetches transcripts and thumbnails</td><td>Local, yt-dlp, read-only access to YouTube</td></tr>
+    <tr><td>Claude API</td><td>Titles, scripts, scene splitting, image prompts, SEO pack, image quality check, transition choice</td><td>Cloud, each user's own key</td></tr>
+    <tr><td>ai33 (voice)</td><td>Speech from the cloned voice, per sentence, with word timings where supported</td><td>Cloud, the team's account</td></tr>
+    <tr><td>Google (images)</td><td>One text-free image per scene, thumbnails, with a style sheet image for consistency</td><td>Cloud, Gemini image models through a Google API key</td></tr>
+    <tr><td>FFmpeg</td><td>Zoom and pan, transitions, captions, popups, music ducking, final encode at 720p, 1080p, 4K</td><td>Local, bundled with the app</td></tr>
+    <tr><td>Shared Drive folder</td><td>Channel configs, frameworks, style references, voice samples, music library, thumbnail templates</td><td>Google Drive, synced to each laptop</td></tr>
+    <tr><td>GitHub</td><td>Source code, release builds, update manifest</td><td>Cloud, developers only</td></tr>
+  </tbody>
+</table>
+<div class="note">The Google consumer subscription (Flow, the Gemini app) has no programming interface. The pipeline uses the Gemini image models through a Google API key with pay-as-you-go billing, roughly three to five US cents per image. Images made by hand in Flow can still be dropped into any scene through the manual option.</div>
+</section>
+
+<section id="s3">
+<div class="eyebrow">Section 3</div>
+<h2>One-time setup per channel</h2>
+<p class="lead">The Channel Setup form collects everything needed to start work. It is saved as one file per channel in the shared folder, so every teammate's app sees the same channel.</p>
+<div class="spec">
+  <div class="card"><h4>Channel</h4><ul class="tight"><li>Name, YouTube URL (the app resolves the channel id)</li><li>Main language, optional secondary languages</li><li>Niche in one line, audience in one line</li><li>Formats: long-form, Shorts, or both; target lengths</li><li>Videos per week (used for batch planning)</li><li>Export folder, music folder, brand colours, caption style</li><li>Owner, browser profile number for upload, status</li></ul></div>
+  <div class="card"><h4>Competitors</h4><ul class="tight"><li>One row per channel: name, URL</li><li>Priority: main, secondary, watch only</li><li>Why we track it (free text)</li><li>Filled by the app: channel id, videos found, last scanned</li></ul></div>
+  <div class="card"><h4>Frameworks</h4><ul class="tight"><li>Type: title, long-form script, Shorts script, scene prompt, thumbnail, SEO, style guide</li><li>Uploaded file (PDF, TXT, MD) or link, version, which format it applies to</li><li>The script stage reads the whole framework text into its instructions</li></ul></div>
+  <div class="card"><h4>Voice</h4><ul class="tight"><li>Tool (ai33), clone link or voice id, voice name</li><li>Language, model or quality setting, speed, style notes</li><li>Sample recording path, whether the tool returns word timings</li><li>Name of the key variable, monthly budget in characters</li><li>Consent record: whose voice, when and how consent was given</li></ul></div>
+  <div class="card"><h4>Images</h4><ul class="tight"><li>Tool (Google), model, style guide sentence added to every prompt</li><li>Negative rules the quality check rejects</li><li>Aspect ratios for long-form and Shorts, output resolution</li><li>Reference images folder (style sheet), popup text style</li><li>Name of the key variable, monthly budget in images</li></ul></div>
+  <div class="card"><h4>Thumbnail</h4><ul class="tight"><li>One to three competitor videos whose thumbnail layout is the template</li><li>Headline font, colours, maximum headline words</li><li>Face, no face, or AI character; must include; must avoid</li><li>Output sizes for long-form and Shorts</li></ul></div>
+  <div class="card"><h4>Stage modes</h4><ul class="tight"><li>For each of the eight stages: auto, review or manual</li><li>Reviewer name per stage</li><li>Defaults: everything on review except Voice on auto</li><li>Can be overridden per video when it is created</li></ul></div>
+  <div class="card"><h4>Settings (per laptop, not per channel)</h4><ul class="tight"><li>Shared folder path, projects folder, exports folder</li><li>API keys for Claude, Google, ai33: stored only on that laptop</li><li>Doctor: checks FFmpeg, yt-dlp, fonts, WebView2, folders, keys, disk space</li></ul></div>
+</div>
+</section>
+
+<section id="s4">
+<div class="eyebrow">Section 4</div>
+<h2>One video, stage by stage</h2>
+<p class="lead">Read top to bottom. The left column is the service each stage calls; the right column is the human option at that stage. Each gate is set per channel to auto (continue), review (wait for approval) or manual (a person supplies the file).</p>
+<figure>
+<svg viewBox="0 0 1000 820" role="img" aria-label="Eight stages from Research to Export drawn top to bottom, each with the service it calls on the left, the files it produces, and the human option on the right; amber gates sit between stages." fill="none" stroke="currentColor" stroke-width="1.4">
+  <defs>
+    <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor" stroke="none"/></marker>
+  </defs>
+  <g font-size="11.5" fill="currentColor" stroke="none" opacity="0.8">
+    <text x="124" y="40" text-anchor="middle" font-weight="600">Calls</text>
+    <text x="410" y="40" text-anchor="middle" font-weight="600">Stage</text>
+    <text x="548" y="40" font-weight="600">Produces</text>
+    <text x="790" y="40" font-weight="600" fill="var(--accent)" opacity="1">Human option</text>
+  </g>
+  <g>
+    <line x1="410" y1="116" x2="410" y2="154" marker-end="url(#a2)"/>
+    <line x1="410" y1="208" x2="410" y2="246" marker-end="url(#a2)"/>
+    <line x1="410" y1="300" x2="410" y2="338" marker-end="url(#a2)"/>
+    <line x1="410" y1="392" x2="410" y2="430" marker-end="url(#a2)"/>
+    <line x1="410" y1="484" x2="410" y2="522" marker-end="url(#a2)"/>
+    <line x1="410" y1="576" x2="410" y2="614" marker-end="url(#a2)"/>
+    <line x1="410" y1="668" x2="410" y2="706" marker-end="url(#a2)"/>
+  </g>
+  <g fill="var(--accent-fill)" stroke="none">
+    <polygon points="410,125 421,136 410,147 399,136"/>
+    <polygon points="410,217 421,228 410,239 399,228"/>
+    <polygon points="410,309 421,320 410,331 399,320"/>
+    <polygon points="410,401 421,412 410,423 399,412"/>
+    <polygon points="410,493 421,504 410,515 399,504"/>
+    <polygon points="410,585 421,596 410,607 399,596"/>
+    <polygon points="410,677 421,688 410,699 399,688"/>
+  </g>
+  <text x="430" y="140" font-size="10.5" fill="var(--accent)" stroke="none">gate</text>
+  <rect x="24" y="70" width="200" height="40" rx="4" stroke-dasharray="5 4"/>
+  <text x="124" y="87" font-size="11.5" text-anchor="middle" fill="currentColor" stroke="none">yt-dlp → YouTube</text>
+  <text x="124" y="101" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">metadata, transcripts, thumbnails only</text>
+  <line x1="224" y1="90" x2="300" y2="90" stroke-dasharray="4 3" marker-end="url(#a2)"/>
+  <rect x="300" y="64" width="220" height="52" rx="6" stroke-width="1.8"/>
+  <text x="410" y="96" font-size="14" text-anchor="middle" fill="currentColor" stroke="none" font-weight="600">1 · Research</text>
+  <g font-family="IBM Plex Mono, Consolas, monospace" font-size="11" fill="currentColor" stroke="none">
+    <text x="548" y="86">candidates.json (outlier scores)</text>
+    <text x="548" y="100">transcript.json</text>
+    <text x="548" y="114">competitor_thumbnail.jpg</text>
+  </g>
+  <g font-size="11.5" fill="var(--accent)" stroke="none">
+    <text x="790" y="86">pick a candidate</text>
+    <text x="790" y="100">or type your own topic</text>
+  </g>
+  <rect x="24" y="162" width="200" height="40" rx="4" stroke-dasharray="5 4"/>
+  <text x="124" y="179" font-size="11.5" text-anchor="middle" fill="currentColor" stroke="none">Claude Opus 5.5</text>
+  <text x="124" y="193" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">+ title framework</text>
+  <line x1="224" y1="182" x2="300" y2="182" stroke-dasharray="4 3" marker-end="url(#a2)"/>
+  <rect x="300" y="156" width="220" height="52" rx="6" stroke-width="1.8"/>
+  <text x="410" y="188" font-size="14" text-anchor="middle" fill="currentColor" stroke="none" font-weight="600">2 · Title</text>
+  <g font-family="IBM Plex Mono, Consolas, monospace" font-size="11" fill="currentColor" stroke="none">
+    <text x="548" y="178">title.json</text>
+    <text x="548" y="192">7 variants, keywords kept,</text>
+    <text x="548" y="206">viral score, copy check</text>
+  </g>
+  <g font-size="11.5" fill="var(--accent)" stroke="none">
+    <text x="790" y="178">edit or choose a variant</text>
+  </g>
+  <rect x="24" y="254" width="200" height="40" rx="4" stroke-dasharray="5 4"/>
+  <text x="124" y="271" font-size="11.5" text-anchor="middle" fill="currentColor" stroke="none">Claude Opus 5.5</text>
+  <text x="124" y="285" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">+ script framework, target language</text>
+  <line x1="224" y1="274" x2="300" y2="274" stroke-dasharray="4 3" marker-end="url(#a2)"/>
+  <rect x="300" y="248" width="220" height="52" rx="6" stroke-width="1.8"/>
+  <text x="410" y="280" font-size="14" text-anchor="middle" fill="currentColor" stroke="none" font-weight="600">3 · Script</text>
+  <g font-family="IBM Plex Mono, Consolas, monospace" font-size="11" fill="currentColor" stroke="none">
+    <text x="548" y="270">script.md + script.json</text>
+    <text x="548" y="284">sections, sentences,</text>
+    <text x="548" y="298">originality check passed</text>
+  </g>
+  <g font-size="11.5" fill="var(--accent)" stroke="none">
+    <text x="790" y="270">edit text, regenerate a section,</text>
+    <text x="790" y="284">lock paragraphs</text>
+  </g>
+  <rect x="24" y="346" width="200" height="40" rx="4" stroke-dasharray="5 4"/>
+  <text x="124" y="363" font-size="11.5" text-anchor="middle" fill="currentColor" stroke="none">Claude Sonnet 5.5</text>
+  <text x="124" y="377" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">+ channel style guide</text>
+  <line x1="224" y1="366" x2="300" y2="366" stroke-dasharray="4 3" marker-end="url(#a2)"/>
+  <rect x="300" y="340" width="220" height="52" rx="6" stroke-width="1.8"/>
+  <text x="410" y="372" font-size="14" text-anchor="middle" fill="currentColor" stroke="none" font-weight="600">4 · Storyboard</text>
+  <g font-family="IBM Plex Mono, Consolas, monospace" font-size="11" fill="currentColor" stroke="none">
+    <text x="548" y="362">storyboard.json: per scene</text>
+    <text x="548" y="376">narration, image prompt, popup,</text>
+    <text x="548" y="390">motion, transition</text>
+  </g>
+  <g font-size="11.5" fill="var(--accent)" stroke="none">
+    <text x="790" y="362">edit any scene field,</text>
+    <text x="790" y="376">split or merge scenes</text>
+  </g>
+  <rect x="24" y="438" width="200" height="40" rx="4" stroke-dasharray="5 4"/>
+  <text x="124" y="455" font-size="11.5" text-anchor="middle" fill="currentColor" stroke="none">ai33 voice clone</text>
+  <text x="124" y="469" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">per sentence; word timings</text>
+  <line x1="224" y1="458" x2="300" y2="458" stroke-dasharray="4 3" marker-end="url(#a2)"/>
+  <rect x="300" y="432" width="220" height="52" rx="6" stroke-width="1.8"/>
+  <text x="410" y="464" font-size="14" text-anchor="middle" fill="currentColor" stroke="none" font-weight="600">5 · Voice</text>
+  <g font-family="IBM Plex Mono, Consolas, monospace" font-size="11" fill="currentColor" stroke="none">
+    <text x="548" y="454">voice.wav</text>
+    <text x="548" y="468">timing.json (words, sentences)</text>
+    <text x="548" y="482">= the clock for everything after</text>
+  </g>
+  <g font-size="11.5" fill="var(--accent)" stroke="none">
+    <text x="790" y="454">upload your own recording,</text>
+    <text x="790" y="468">re-record a sentence</text>
+  </g>
+  <rect x="24" y="530" width="200" height="40" rx="4" stroke-dasharray="5 4"/>
+  <text x="124" y="547" font-size="11.5" text-anchor="middle" fill="currentColor" stroke="none">Google image model</text>
+  <text x="124" y="561" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">+ Claude vision checks each image</text>
+  <line x1="224" y1="550" x2="300" y2="550" stroke-dasharray="4 3" marker-end="url(#a2)"/>
+  <rect x="300" y="524" width="220" height="52" rx="6" stroke-width="1.8"/>
+  <text x="410" y="556" font-size="14" text-anchor="middle" fill="currentColor" stroke="none" font-weight="600">6 · Images</text>
+  <g font-family="IBM Plex Mono, Consolas, monospace" font-size="11" fill="currentColor" stroke="none">
+    <text x="548" y="546">scene_01.png … scene_40.png</text>
+    <text x="548" y="560">text-free, one style sheet,</text>
+    <text x="548" y="574">rejected/ for failed QA</text>
+  </g>
+  <g font-size="11.5" fill="var(--accent)" stroke="none">
+    <text x="790" y="546">regenerate with a note,</text>
+    <text x="790" y="560">upload or lock an image</text>
+  </g>
+  <rect x="24" y="622" width="200" height="40" rx="4" stroke-dasharray="5 4"/>
+  <text x="124" y="639" font-size="11.5" text-anchor="middle" fill="currentColor" stroke="none">FFmpeg (on the laptop)</text>
+  <text x="124" y="653" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">zoom/pan, transitions, captions, music</text>
+  <line x1="224" y1="642" x2="300" y2="642" stroke-dasharray="4 3" marker-end="url(#a2)"/>
+  <rect x="300" y="616" width="220" height="52" rx="6" stroke-width="1.8"/>
+  <text x="410" y="648" font-size="14" text-anchor="middle" fill="currentColor" stroke="none" font-weight="600">7 · Edit</text>
+  <g font-family="IBM Plex Mono, Consolas, monospace" font-size="11" fill="currentColor" stroke="none">
+    <text x="548" y="638">timeline.json, captions.ass</text>
+    <text x="548" y="652">proxy preview, then</text>
+    <text x="548" y="666">final_720p / 1080p / 2160p.mp4</text>
+  </g>
+  <g font-size="11.5" fill="var(--accent)" stroke="none">
+    <text x="790" y="638">built-in timeline editor, or</text>
+    <text x="790" y="652">Kdenlive · Resolve · CapCut</text>
+  </g>
+  <rect x="24" y="714" width="200" height="40" rx="4" stroke-dasharray="5 4"/>
+  <text x="124" y="731" font-size="11.5" text-anchor="middle" fill="currentColor" stroke="none">Claude (SEO) + Google image</text>
+  <text x="124" y="745" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">thumbnail from competitor template</text>
+  <line x1="224" y1="734" x2="300" y2="734" stroke-dasharray="4 3" marker-end="url(#a2)"/>
+  <rect x="300" y="708" width="220" height="52" rx="6" stroke-width="1.8"/>
+  <text x="410" y="740" font-size="14" text-anchor="middle" fill="currentColor" stroke="none" font-weight="600">8 · Export</text>
+  <g font-family="IBM Plex Mono, Consolas, monospace" font-size="11" fill="currentColor" stroke="none">
+    <text x="548" y="730">thumbnail.png, metadata.json</text>
+    <text x="548" y="744">disclosure flag, provenance.pdf</text>
+    <text x="548" y="758">copied to the export folder</text>
+  </g>
+  <g font-size="11.5" fill="var(--accent)" stroke="none">
+    <text x="790" y="730">approve, edit tags and</text>
+    <text x="790" y="744">description, re-export</text>
+  </g>
+  <text x="410" y="800" font-size="11" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">a failed quality gate (copied script, reused image, missing consent, unfulfilled title) blocks export until a reviewer overrides it with a logged reason</text>
+</svg>
+<figcaption>Every stage reads the files of the stage before it and writes its own files into the video's project folder, so a person can open any folder and change anything between stages. Dashed boxes are services outside the app.</figcaption>
+</figure>
+</section>
+
+<section id="s5">
+<div class="eyebrow">Section 5</div>
+<h2>Stage specifications</h2>
+<p class="lead">Each card is one stage: what goes in, exactly what the app does, what comes out, what is checked, and what a person may do. Times are estimates for a ten-minute video on a laptop without a GPU.</p>
+<div class="spec">
+  <div class="card"><h4><span class="num">01</span>Research</h4><dl>
+    <dt>Input</dt><dd>Competitor list from the channel; optional topic typed by the editor</dd>
+    <dt>Steps</dt><dd>List each competitor's videos and Shorts tabs without downloading media; cache results; compute an outlier score per video = views divided by the median views of the neighbouring videos of that channel, age-normalised, plus views per subscriber; fetch exact numbers for the top 20 to 50; for the chosen video, fetch the transcript (for structure only, never copied) and the full-size thumbnail</dd>
+    <dt>Output</dt><dd class="mono">candidates.json · transcript.json · competitor_thumbnail.jpg</dd>
+    <dt>Checks</dt><dd>Candidate newer than 7 days is excluded from baselines; channel not scanned more than once per hour; back-off when YouTube asks for sign-in</dd>
+    <dt>Human</dt><dd class="human">Pick a candidate, type your own topic, exclude a channel, rescan</dd>
+    <dt>Time</dt><dd>1 to 3 minutes</dd>
+  </dl></div>
+  <div class="card"><h4><span class="num">02</span>Title</h4><dl>
+    <dt>Input</dt><dd>Chosen candidate title and its metrics; the channel's title framework; the niche and audience lines</dd>
+    <dt>Steps</dt><dd>Claude writes 7 variants that keep the proven keywords and structure but are not copies; each gets formula, emotional trigger, curiosity trigger, viral score and a reason it could outperform; a similarity check rejects near-copies of the competitor and of the channel's recent titles</dd>
+    <dt>Output</dt><dd class="mono">title.json</dd>
+    <dt>Checks</dt><dd>Length under 70 characters, no misleading promise the script cannot keep (re-checked after the script exists)</dd>
+    <dt>Human</dt><dd class="human">Edit, choose, reorder, ask for 7 more</dd>
+    <dt>Time</dt><dd>Under a minute</dd>
+  </dl></div>
+  <div class="card"><h4><span class="num">03</span>Script</h4><dl>
+    <dt>Input</dt><dd>Approved title; script framework (long-form or Shorts); target language; target length; transcript summary of the competitor video</dd>
+    <dt>Steps</dt><dd>Claude writes the script in sections (hook, setup, progression, payoff, call to action as the framework defines) with sentence boundaries marked; a speech-normalisation pass expands numbers, dates and currency in the target language so the voice reads them correctly; word count set from the target length and the voice's speaking rate</dd>
+    <dt>Output</dt><dd class="mono">script.md (readable) · script.json (sections and sentences)</dd>
+    <dt>Checks</dt><dd>Originality: n-gram and meaning similarity against the competitor transcript and the channel's last 30 scripts must stay under the ceiling; no advisory persona on finance, health or legal topics; title promise appears in the first 20 percent</dd>
+    <dt>Human</dt><dd class="human">Edit any paragraph, regenerate one section, lock paragraphs so regeneration never touches them</dd>
+    <dt>Time</dt><dd>2 to 5 minutes plus reading</dd>
+  </dl></div>
+  <div class="card"><h4><span class="num">04</span>Storyboard</h4><dl>
+    <dt>Input</dt><dd>Approved script sentences; channel style guide; popup style; aspect ratio</dd>
+    <dt>Steps</dt><dd>Claude groups sentences into scenes (about 8 to 12 seconds each for long-form, 3 to 4 for Shorts); for each scene writes a text-free image prompt in the channel style, chooses the popup phrase (at most 6 words paraphrasing the narration), a motion preset (zoom in, zoom out, pan, hold) and the transition into the next scene; motion alternates so no two neighbouring scenes move the same way</dd>
+    <dt>Output</dt><dd class="mono">storyboard.json</dd>
+    <dt>Checks</dt><dd>Scene density within limits; at least a set share of scenes carry a popup, chart card or text card; no two prompts near-identical</dd>
+    <dt>Human</dt><dd class="human">Edit any field, split or merge scenes, reorder, lock a scene</dd>
+    <dt>Time</dt><dd>1 to 2 minutes plus review</dd>
+  </dl></div>
+  <div class="card"><h4><span class="num">05</span>Voice</h4><dl>
+    <dt>Input</dt><dd>Approved script sentences; the channel's cloned voice (ai33), speed and style settings</dd>
+    <dt>Steps</dt><dd>Synthesise sentence by sentence (small requests, exact sentence boundaries, cheap re-dos); concatenate with sample-accurate offsets; collect word timings from the tool when it returns them; otherwise align in the background on the CPU (several minutes) or fall back to sentence timing; cache every sentence by a content hash so an edit re-bills only the changed sentence</dd>
+    <dt>Output</dt><dd class="mono">voice.wav (48 kHz) · timing.json</dd>
+    <dt>Checks</dt><dd>Words shorter than 40 ms or longer than 2 s are flagged; total duration against target length; consent record present for the voice</dd>
+    <dt>Human</dt><dd class="human">Upload your own recording (aligned automatically), re-record a sentence, nudge a timing</dd>
+    <dt>Time</dt><dd>1 to 3 minutes</dd>
+  </dl></div>
+  <div class="card"><h4><span class="num">06</span>Images</h4><dl>
+    <dt>Input</dt><dd>Storyboard prompts; style sheet image; aspect ratio; negative rules</dd>
+    <dt>Steps</dt><dd>Generate one image per scene at the largest size the model offers, passing the style sheet and the previous scene as references for a consistent look; Claude vision checks each image against its prompt (subject present, no garbled text, no real person, no logo, no deformed hands); failures are regenerated up to three times with the reason added to the prompt; a perceptual hash is compared against the channel's past images to prevent reuse</dd>
+    <dt>Output</dt><dd class="mono">scene_01.png … scene_NN.png · rejected/ · style_sheet.png</dd>
+    <dt>Checks</dt><dd>Quality check verdict stored per image; budget guard warns before a batch exceeds the monthly plan</dd>
+    <dt>Human</dt><dd class="human">Regenerate with a note, upload an image (for example one made in Flow), lock an image</dd>
+    <dt>Time</dt><dd>5 to 10 minutes for 40 scenes</dd>
+  </dl></div>
+  <div class="card"><h4><span class="num">07</span>Edit</h4><dl>
+    <dt>Input</dt><dd>Storyboard, voice timing, images, music folder, caption style, brand colours</dd>
+    <dt>Steps</dt><dd>Build the timeline: scene in and out from sentence timestamps; zoom and pan path per scene; chosen transition at each boundary; popups rendered as image layers with the brand font; word-level captions as a subtitle track; music under the voice with automatic ducking; render a low-resolution proxy for preview; render the final presets</dd>
+    <dt>Output</dt><dd class="mono">timeline.json · captions.ass · popups/ · proxy.mp4 · final_720p.mp4 · final_1080p.mp4 · final_2160p.mp4</dd>
+    <dt>Checks</dt><dd>Audio peaks, caption readability per language, no black frames, duration equals voice length plus intro and outro</dd>
+    <dt>Human</dt><dd class="human">Fix in the built-in editor; or export the project to Kdenlive, DaVinci Resolve or CapCut and import the finished file</dd>
+    <dt>Time</dt><dd>5 to 15 minutes per preset on a laptop</dd>
+  </dl></div>
+  <div class="card"><h4><span class="num">08</span>Export</h4><dl>
+    <dt>Input</dt><dd>Final renders; approved title; script; competitor thumbnail template; channel brand settings</dd>
+    <dt>Steps</dt><dd>Thumbnail: a vision pass extracts the competitor layout (subject position, text blocks, colours, shapes) as a template; the image model draws a text-free subject; the app composes headline and shapes on top in the brand font; SEO pack: Claude writes title, description, tags, chapters and the pinned comment in the target language; disclosure flag set to yes by default; provenance bundle assembled; everything copied to the channel's export folder</dd>
+    <dt>Output</dt><dd class="mono">thumbnail.png · metadata.json · provenance.pdf · export folder</dd>
+    <dt>Checks</dt><dd>Thumbnail similarity to the competitor's below the ceiling; title and thumbnail promise found in the script; music licence stored</dd>
+    <dt>Human</dt><dd class="human">Approve, edit metadata, swap thumbnail variant, re-export</dd>
+    <dt>Time</dt><dd>1 to 2 minutes</dd>
+  </dl></div>
+</div>
+</section>
+
+<section id="s6">
+<div class="eyebrow">Section 6</div>
+<h2>The storyboard record</h2>
+<p class="lead">The storyboard is the centre of the product. Every scene is one record with the fields below; the board screen edits them, the voice stage times them, the image stage fills them, and the edit stage renders them. A locked field is never overwritten by a regeneration.</p>
+<table>
+  <thead><tr><th>Field</th><th>Meaning</th><th>Set by</th><th>Editable</th></tr></thead>
+  <tbody>
+    <tr><td class="k">index</td><td>Order of the scene</td><td>Storyboard stage</td><td>Reorder, split, merge</td></tr>
+    <tr><td class="k">narration</td><td>The sentences spoken during this scene</td><td>Script stage</td><td>Yes (re-voices only this scene)</td></tr>
+    <tr><td class="k">start, end</td><td>Seconds on the timeline, from the voice timing</td><td>Voice stage</td><td>Nudge in the editor</td></tr>
+    <tr><td class="k">image_prompt</td><td>Text-free picture description in the channel style</td><td>Storyboard stage</td><td>Yes</td></tr>
+    <tr><td class="k">image</td><td>Path of the approved image and its quality verdict</td><td>Images stage</td><td>Regenerate, upload, lock</td></tr>
+    <tr><td class="k">popup</td><td>Up to 6 words, style preset, in and out times, position</td><td>Storyboard stage</td><td>Yes</td></tr>
+    <tr><td class="k">motion</td><td>Zoom in, zoom out, pan left or right, hold; start and end frame rectangles</td><td>Storyboard stage</td><td>Yes, with handles in the editor</td></tr>
+    <tr><td class="k">transition</td><td>Type and duration of the cut into the next scene</td><td>Storyboard stage</td><td>Yes, picker</td></tr>
+    <tr><td class="k">captions</td><td>Word cues inside the scene</td><td>Voice stage</td><td>Text fixes</td></tr>
+    <tr><td class="k">locked</td><td>Which fields a person has fixed by hand</td><td>Editor</td><td>Toggle</td></tr>
+    <tr><td class="k">notes</td><td>Reviewer comments and regeneration reasons</td><td>Anyone</td><td>Yes</td></tr>
+  </tbody>
+</table>
+</section>
+
+<section id="s7">
+<div class="eyebrow">Section 7</div>
+<h2>Voice timing drives the edit</h2>
+<p class="lead">The voice carries word and sentence timestamps. Those timestamps set where each scene starts and ends, how long each image stays, when a popup appears, when captions change and when the music ducks. This is what makes the automatic edit look cut to the narration instead of to a fixed clock.</p>
+<figure>
+<svg viewBox="0 0 1000 330" role="img" aria-label="Six timeline tracks over sixty seconds: voice sentences, scenes, images with zoom and pan and transitions at the scene boundaries, popups, captions and ducked music, all aligned to the voice." fill="none" stroke="currentColor" stroke-width="1.2">
+  <defs>
+    <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor" stroke="none"/></marker>
+  </defs>
+  <line x1="140" y1="40" x2="960" y2="40"/>
+  <g font-size="10.5" fill="currentColor" stroke="none" opacity="0.75">
+    <text x="140" y="30" text-anchor="middle">0 s</text><text x="277" y="30" text-anchor="middle">10</text><text x="413" y="30" text-anchor="middle">20</text><text x="550" y="30" text-anchor="middle">30</text><text x="687" y="30" text-anchor="middle">40</text><text x="823" y="30" text-anchor="middle">50</text><text x="960" y="30" text-anchor="middle">60 s</text>
+  </g>
+  <g>
+    <line x1="140" y1="36" x2="140" y2="44"/><line x1="277" y1="36" x2="277" y2="44"/><line x1="413" y1="36" x2="413" y2="44"/><line x1="550" y1="36" x2="550" y2="44"/><line x1="687" y1="36" x2="687" y2="44"/><line x1="823" y1="36" x2="823" y2="44"/><line x1="960" y1="36" x2="960" y2="44"/>
+  </g>
+  <g stroke="var(--accent)" stroke-dasharray="3 4" opacity="0.9">
+    <line x1="345" y1="56" x2="345" y2="296"/><line x1="564" y1="56" x2="564" y2="296"/><line x1="782" y1="56" x2="782" y2="296"/>
+  </g>
+  <g font-size="11.5" fill="currentColor" stroke="none">
+    <text x="20" y="85">Voice (sentences)</text>
+    <text x="20" y="125">Scenes</text>
+    <text x="20" y="165">Images (zoom / pan)</text>
+    <text x="20" y="205">Popups (text)</text>
+    <text x="20" y="245">Captions (words)</text>
+    <text x="20" y="285">Music (ducked)</text>
+  </g>
+  <g fill="var(--soft)">
+    <rect x="140" y="70" width="94" height="22" rx="2"/><rect x="236" y="70" width="109" height="22" rx="2"/><rect x="347" y="70" width="94" height="22" rx="2"/><rect x="443" y="70" width="121" height="22" rx="2"/><rect x="566" y="70" width="94" height="22" rx="2"/><rect x="662" y="70" width="120" height="22" rx="2"/><rect x="784" y="70" width="94" height="22" rx="2"/><rect x="880" y="70" width="80" height="22" rx="2"/>
+  </g>
+  <g font-size="10" fill="currentColor" stroke="none" opacity="0.8" text-anchor="middle">
+    <text x="187" y="85">s1</text><text x="290" y="85">s2</text><text x="394" y="85">s3</text><text x="503" y="85">s4</text><text x="613" y="85">s5</text><text x="722" y="85">s6</text><text x="831" y="85">s7</text><text x="920" y="85">s8</text>
+  </g>
+  <g>
+    <rect x="140" y="110" width="205" height="22" rx="2"/><rect x="345" y="110" width="219" height="22" rx="2"/><rect x="564" y="110" width="218" height="22" rx="2"/><rect x="782" y="110" width="178" height="22" rx="2"/>
+  </g>
+  <g font-size="10.5" fill="currentColor" stroke="none" text-anchor="middle">
+    <text x="242" y="125">scene 1 · s1–s2</text><text x="454" y="125">scene 2 · s3–s4</text><text x="673" y="125">scene 3 · s5–s6</text><text x="871" y="125">scene 4 · s7–s8</text>
+  </g>
+  <g>
+    <rect x="140" y="150" width="205" height="22" rx="2"/><rect x="345" y="150" width="219" height="22" rx="2"/><rect x="564" y="150" width="218" height="22" rx="2"/><rect x="782" y="150" width="178" height="22" rx="2"/>
+  </g>
+  <g font-size="10.5" fill="currentColor" stroke="none" text-anchor="middle">
+    <text x="242" y="165">zoom in</text><text x="454" y="165">pan right</text><text x="673" y="165">zoom out</text><text x="871" y="165">slow push</text>
+  </g>
+  <g fill="var(--accent-fill)" stroke="none">
+    <polygon points="345,144 351,150 345,156 339,150"/><polygon points="564,144 570,150 564,156 558,150"/><polygon points="782,144 788,150 782,156 776,150"/>
+  </g>
+  <text x="345" y="186" font-size="10" fill="var(--accent)" stroke="none" text-anchor="middle">crossfade</text>
+  <text x="564" y="186" font-size="10" fill="var(--accent)" stroke="none" text-anchor="middle">wipe</text>
+  <text x="782" y="186" font-size="10" fill="var(--accent)" stroke="none" text-anchor="middle">zoom-through</text>
+  <g fill="var(--accent-fill)" stroke="none">
+    <rect x="181" y="193" width="55" height="18" rx="2"/><rect x="386" y="193" width="68" height="18" rx="2"/><rect x="605" y="193" width="82" height="18" rx="2"/><rect x="823" y="193" width="69" height="18" rx="2"/>
+  </g>
+  <g font-size="9.5" fill="var(--accent-ink)" stroke="none" text-anchor="middle">
+    <text x="208" y="206">key phrase</text><text x="420" y="206">key phrase</text><text x="646" y="206">key phrase</text><text x="857" y="206">key phrase</text>
+  </g>
+  <g fill="var(--soft)">
+    <rect x="140" y="233" width="30" height="16"/><rect x="172" y="233" width="38" height="16"/><rect x="212" y="233" width="24" height="16"/><rect x="238" y="233" width="44" height="16"/><rect x="284" y="233" width="30" height="16"/><rect x="316" y="233" width="27" height="16"/>
+    <rect x="347" y="233" width="36" height="16"/><rect x="385" y="233" width="28" height="16"/><rect x="415" y="233" width="46" height="16"/><rect x="463" y="233" width="30" height="16"/><rect x="495" y="233" width="38" height="16"/><rect x="535" y="233" width="27" height="16"/>
+    <rect x="566" y="233" width="40" height="16"/><rect x="608" y="233" width="26" height="16"/><rect x="636" y="233" width="44" height="16"/><rect x="682" y="233" width="34" height="16"/><rect x="718" y="233" width="30" height="16"/><rect x="750" y="233" width="30" height="16"/>
+    <rect x="784" y="233" width="38" height="16"/><rect x="824" y="233" width="30" height="16"/><rect x="856" y="233" width="44" height="16"/><rect x="902" y="233" width="26" height="16"/><rect x="930" y="233" width="30" height="16"/>
+  </g>
+  <polyline points="140,272 148,272 156,288 944,288 952,272 960,272"/>
+  <text x="550" y="304" font-size="10" fill="currentColor" stroke="none" text-anchor="middle" opacity="0.75">music drops about 12 dB while the voice plays and rises again at the end</text>
+  <line x1="345" y1="92" x2="345" y2="108" marker-end="url(#a3)" stroke="var(--accent)"/>
+  <line x1="564" y1="92" x2="564" y2="108" marker-end="url(#a3)" stroke="var(--accent)"/>
+  <line x1="782" y1="92" x2="782" y2="108" marker-end="url(#a3)" stroke="var(--accent)"/>
+</svg>
+<figcaption>Sentence boundaries from the voice timing (s1 to s8) are grouped into scenes; each scene gets one image with its own motion, a chosen transition at the boundary, a popup for its key phrase, word-level captions, and music that ducks under the voice.</figcaption>
+</figure>
+<h3>How transitions are chosen</h3>
+<p>Claude assigns a transition to every cut from FFmpeg's library (crossfade, wipes, slides, circle and radial reveals, zoom-through and about forty more). Three rules keep them smooth: the direction of motion carries across the cut (a zoom in is followed by a scene that starts tight and pans, not by a sudden zoom out), the same transition is never used twice in a row, and the duration is matched to the pause in the narration at that point (short cuts on fast passages, half-second fades on calm ones). Shorts use faster, simpler transitions than long-form.</p>
+</section>
+
+<section id="s8">
+<div class="eyebrow">Section 8</div>
+<h2>Quality gates</h2>
+<p class="lead">YouTube's July 2025 "inauthentic content" rule and its July 2026 clarification describe the output of a careless slideshow pipeline almost word for word. These gates turn that wording into checks the app runs itself. A failed gate blocks export until a reviewer overrides it with a logged reason.</p>
+<table>
+  <thead><tr><th>Gate</th><th>What is checked</th><th>Stage</th><th>On failure</th></tr></thead>
+  <tbody>
+    <tr><td>No advisory AI persona</td><td>Script never presents a doctor, financial adviser or lawyer giving personal advice; sensitive topics are told as stories or education with a disclaimer card</td><td>Script</td><td><span class="pill bad">block</span></td></tr>
+    <tr><td>Voice consent</td><td>Only enrolled, consented voices are used; the consent record is attached to the project</td><td>Voice</td><td><span class="pill bad">block</span></td></tr>
+    <tr><td>No competitor reuse</td><td>No competitor footage; thumbnail similarity to the reference stays under the ceiling; no logos, faces or branding copied</td><td>Export</td><td><span class="pill bad">block</span></td></tr>
+    <tr><td>Script originality</td><td>Phrase overlap and meaning similarity against the competitor transcript and the channel's recent scripts under the ceiling</td><td>Script</td><td><span class="pill bad">block</span></td></tr>
+    <tr><td>Promise kept</td><td>The title's claim and the thumbnail's subject appear in the first fifth of the video</td><td>Export</td><td><span class="pill bad">block</span></td></tr>
+    <tr><td>Visual variety</td><td>New visual at least every 8 to 12 seconds (3 to 4 for Shorts); mixed motion and transitions; share of popups and cards above the minimum; no image reused across videos</td><td>Storyboard, Edit</td><td><span class="pill warn">warn, block at threshold</span></td></tr>
+    <tr><td>Framework rotation</td><td>The same structural template is not used more than the cap per channel per 30 days</td><td>Script</td><td><span class="pill warn">warn</span></td></tr>
+    <tr><td>Disclosure</td><td>Synthetic-content flag defaults to yes; provenance metadata of images recorded, never stripped</td><td>Export</td><td><span class="pill warn">warn</span></td></tr>
+    <tr><td>Music licence</td><td>Every track in the music folder has a licence file; AI music as the main focus triggers disclosure</td><td>Edit</td><td><span class="pill warn">warn</span></td></tr>
+    <tr><td>Cadence</td><td>Uploads per channel per day stay under the configured cap; metadata templates rotate</td><td>Export</td><td><span class="pill warn">warn</span></td></tr>
+  </tbody>
+</table>
+<p>Rules live in a versioned file with the source links and a "last verified" date and are re-checked quarterly, because the policy pages changed four times between July 2025 and August 2026.</p>
+</section>
+
+<section id="s9">
+<div class="eyebrow">Section 9</div>
+<h2>Three ways a video is finished</h2>
+<p class="lead">The timeline file is the single source of truth. FFmpeg renders it automatically. For manual fixes the built-in editor changes the same file. For deeper work the project is exported to a professional editor and the finished file comes back.</p>
+<figure>
+<svg viewBox="0 0 1000 290" role="img" aria-label="Storyboard and voice timing build a timeline file; FFmpeg renders it to three resolutions; a built-in editor edits the same file; an export to Kdenlive, Resolve or CapCut lets an external editor finish the video." fill="none" stroke="currentColor" stroke-width="1.4">
+  <defs>
+    <marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor" stroke="none"/></marker>
+  </defs>
+  <rect x="20" y="118" width="200" height="52" rx="6"/>
+  <text x="120" y="139" font-size="12.5" text-anchor="middle" fill="currentColor" stroke="none">storyboard.json</text>
+  <text x="120" y="156" font-size="12.5" text-anchor="middle" fill="currentColor" stroke="none">+ timing.json + images</text>
+  <line x1="220" y1="144" x2="296" y2="144" marker-end="url(#a4)"/>
+  <text x="258" y="136" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">build</text>
+  <rect x="296" y="118" width="170" height="52" rx="6" stroke-width="2"/>
+  <text x="381" y="139" font-size="13" text-anchor="middle" fill="currentColor" stroke="none" font-weight="600">timeline.json</text>
+  <text x="381" y="156" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">source of truth</text>
+  <line x1="466" y1="144" x2="542" y2="144" marker-end="url(#a4)"/>
+  <text x="504" y="136" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">render</text>
+  <rect x="542" y="118" width="150" height="52" rx="6"/>
+  <text x="617" y="139" font-size="12.5" text-anchor="middle" fill="currentColor" stroke="none">FFmpeg</text>
+  <text x="617" y="156" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">proxy first, then final</text>
+  <rect x="780" y="50" width="200" height="36" rx="4"/><text x="880" y="73" font-size="12" text-anchor="middle" fill="currentColor" stroke="none" font-family="IBM Plex Mono, Consolas, monospace">final_720p.mp4</text>
+  <rect x="780" y="126" width="200" height="36" rx="4"/><text x="880" y="149" font-size="12" text-anchor="middle" fill="currentColor" stroke="none" font-family="IBM Plex Mono, Consolas, monospace">final_1080p.mp4</text>
+  <rect x="780" y="202" width="200" height="36" rx="4"/><text x="880" y="225" font-size="12" text-anchor="middle" fill="currentColor" stroke="none" font-family="IBM Plex Mono, Consolas, monospace">final_2160p.mp4 (4K)</text>
+  <line x1="692" y1="136" x2="780" y2="70" marker-end="url(#a4)"/>
+  <line x1="692" y1="144" x2="780" y2="144" marker-end="url(#a4)"/>
+  <line x1="692" y1="152" x2="780" y2="218" marker-end="url(#a4)"/>
+  <rect x="256" y="222" width="250" height="48" rx="6" stroke="var(--accent)" stroke-width="1.8"/>
+  <text x="381" y="242" font-size="12.5" text-anchor="middle" fill="var(--accent)" stroke="none" font-weight="600">Built-in timeline editor</text>
+  <text x="381" y="259" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">reorder, trim, swap image, text, music, transitions</text>
+  <line x1="366" y1="170" x2="366" y2="222" marker-end="url(#a4)"/>
+  <line x1="396" y1="222" x2="396" y2="170" marker-end="url(#a4)"/>
+  <text x="408" y="200" font-size="10.5" fill="currentColor" stroke="none" opacity="0.75">edits save back</text>
+  <rect x="236" y="20" width="290" height="48" rx="6" stroke="var(--accent)" stroke-width="1.8"/>
+  <text x="381" y="40" font-size="12.5" text-anchor="middle" fill="var(--accent)" stroke="none" font-weight="600">Export project to your editor</text>
+  <text x="381" y="57" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">Kdenlive (free) · DaVinci Resolve (FCPXML) · CapCut draft</text>
+  <line x1="381" y1="118" x2="381" y2="68" marker-end="url(#a4)"/>
+  <text x="392" y="96" font-size="10.5" fill="currentColor" stroke="none" opacity="0.75">hand-off</text>
+  <rect x="560" y="20" width="160" height="48" rx="6" stroke-dasharray="5 4"/>
+  <text x="640" y="40" font-size="12" text-anchor="middle" fill="currentColor" stroke="none">finished in the</text>
+  <text x="640" y="57" font-size="12" text-anchor="middle" fill="currentColor" stroke="none">external editor</text>
+  <line x1="526" y1="44" x2="560" y2="44" marker-end="url(#a4)"/>
+  <line x1="720" y1="44" x2="780" y2="62" stroke-dasharray="4 3" marker-end="url(#a4)"/>
+  <text x="736" y="36" font-size="10.5" fill="currentColor" stroke="none" opacity="0.75">imported back</text>
+</svg>
+<figcaption>Automatic renders cover most videos. The built-in editor handles the common fixes without leaving the app. The export hand-off exists for the cases that need a full professional editor.</figcaption>
+</figure>
+<h3>What the built-in editor can do</h3>
+<table>
+  <thead><tr><th>Area</th><th>Actions</th></tr></thead>
+  <tbody>
+    <tr><td>Scenes</td><td>Reorder by drag, split at a word, merge, trim to the nearest sentence boundary, change duration (voice pauses stretch, never the speech)</td></tr>
+    <tr><td>Images</td><td>Swap, regenerate with a note, upload, crop for 9:16, adjust the zoom and pan path with handles on the preview</td></tr>
+    <tr><td>Text</td><td>Edit popup text, position, style preset, in and out times; edit caption words and style; per-language caption tracks</td></tr>
+    <tr><td>Sound</td><td>Change the music track, offset, volume, ducking depth; mute a scene; re-voice one sentence</td></tr>
+    <tr><td>Cuts</td><td>Pick a transition and its duration from the library, or ask for a new automatic choice</td></tr>
+    <tr><td>Preview</td><td>Scrub with waveform, play from any point, render a low-resolution proxy of a selected range in seconds</td></tr>
+    <tr><td>Hand-off</td><td>Export to Kdenlive (keeps keyframes and titles), to DaVinci Resolve as FCPXML (keeps motion, captions as a separate file), to CapCut as a draft (best effort, pinned CapCut version)</td></tr>
+  </tbody>
+</table>
+</section>
+
+<section id="s10">
+<div class="eyebrow">Section 10</div>
+<h2>Output formats and resolutions</h2>
+<table>
+  <thead><tr><th>Preset</th><th>Long-form 16:9</th><th>Shorts 9:16</th><th>Encoding</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>720p</td><td>1280 × 720</td><td>720 × 1280</td><td>H.264, 30 fps, AAC 48 kHz</td><td>Fast preview-grade export</td></tr>
+    <tr><td>1080p</td><td>1920 × 1080</td><td>1080 × 1920</td><td>H.264 high profile, 30 fps, AAC 48 kHz</td><td>Default upload</td></tr>
+    <tr><td>4K</td><td>3840 × 2160</td><td>2160 × 3840</td><td>H.264 or H.265, 30 fps, AAC 48 kHz</td><td>Images requested at the model's largest size and scaled with a high-quality filter; slow on a laptop</td></tr>
+    <tr><td>Proxy</td><td>854 × 480</td><td>480 × 854</td><td>Fast H.264</td><td>For previewing cuts in the editor only</td></tr>
+  </tbody>
+</table>
+<p>One storyboard can produce both the long-form and the Shorts version: Shorts use a 9:16 crop of each image with its own motion path, faster transitions and larger captions. Which versions to render is chosen per channel.</p>
+</section>
+
+<section id="s11">
+<div class="eyebrow">Section 11</div>
+<h2>Languages</h2>
+<p class="lead">The first ten languages in order of YouTube audience size, grouped by how they earn. Script, voice, captions, popups, thumbnail text and the SEO pack are all produced in the target language.</p>
+<table>
+  <thead><tr><th>Tier</th><th>Languages</th><th>Why</th><th>Special handling</th></tr></thead>
+  <tbody>
+    <tr><td>A, high ad rates</td><td>English, German, Japanese, French, Spanish (Spain and US)</td><td>A ten-minute video pays back on tens of thousands of views</td><td>Japanese captions wrap at about 13 full-width characters; French needs non-breaking spaces before punctuation</td></tr>
+    <tr><td>B, volume</td><td>Hindi, Indonesian, Arabic, Spanish (Latin America), Portuguese (Brazil)</td><td>Large audiences, low ad rates; throughput matters</td><td>Hindi word timing comes from the voice tool or sentence timing (automatic alignment is unreliable); Arabic is right-to-left with proper letter joining; option to use an English master with YouTube's own dubbing instead of native production</td></tr>
+    <tr><td>Special</td><td>Russian</td><td>Large audience, almost no ad revenue</td><td>Only with a non-AdSense revenue plan</td></tr>
+  </tbody>
+</table>
+<p>Fonts for every script (Latin, Devanagari, Arabic, Japanese, Korean) ship with the app so captions never fall back to boxes. A speech-normalisation pass writes out numbers, dates and currency in each language before the voice reads them.</p>
+</section>
+
+<section id="s12">
+<div class="eyebrow">Section 12</div>
+<h2>Team setup, data and updates</h2>
+<p class="lead">No one on the team needs git or a developer tool. The installer comes from GitHub Releases and updates itself. Channel data syncs through a shared Google Drive folder. Each person uses their own API keys, stored only on their laptop.</p>
+<figure>
+<svg viewBox="0 0 1000 320" role="img" aria-label="GitHub builds an installer that updates each editor's laptop; laptops sync channel data with a shared Google Drive folder, call cloud services with per-user keys, and read YouTube through yt-dlp." fill="none" stroke="currentColor" stroke-width="1.4">
+  <defs>
+    <marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor" stroke="none"/></marker>
+  </defs>
+  <rect x="20" y="40" width="190" height="48" rx="6"/>
+  <text x="115" y="60" font-size="12.5" text-anchor="middle" fill="currentColor" stroke="none">GitHub repository</text>
+  <text x="115" y="77" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">code only, pull request per milestone</text>
+  <line x1="115" y1="88" x2="115" y2="136" marker-end="url(#a5)"/>
+  <text x="124" y="116" font-size="10.5" fill="currentColor" stroke="none" opacity="0.75">CI builds</text>
+  <rect x="20" y="136" width="190" height="48" rx="6"/>
+  <text x="115" y="156" font-size="12.5" text-anchor="middle" fill="currentColor" stroke="none">Installer + updates</text>
+  <text x="115" y="173" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">GitHub Releases, checksum, auto-update</text>
+  <line x1="210" y1="160" x2="310" y2="160" marker-end="url(#a5)"/>
+  <text x="260" y="152" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">install</text>
+  <rect x="310" y="14" width="210" height="292" rx="8" stroke-dasharray="6 4" opacity="0.6"/>
+  <rect x="330" y="30" width="170" height="64" rx="6"/>
+  <text x="415" y="52" font-size="12.5" text-anchor="middle" fill="currentColor" stroke="none">Editor A laptop</text>
+  <text x="415" y="68" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">app · own API keys · local media</text>
+  <text x="415" y="84" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">FFmpeg, yt-dlp, fonts bundled</text>
+  <rect x="330" y="128" width="170" height="64" rx="6"/>
+  <text x="415" y="150" font-size="12.5" text-anchor="middle" fill="currentColor" stroke="none">Editor B laptop</text>
+  <text x="415" y="166" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">app · own API keys · local media</text>
+  <text x="415" y="182" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">no GPU needed</text>
+  <rect x="330" y="226" width="170" height="64" rx="6"/>
+  <text x="415" y="248" font-size="12.5" text-anchor="middle" fill="currentColor" stroke="none">Editor C laptop</text>
+  <text x="415" y="264" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">app · own API keys · local media</text>
+  <text x="415" y="280" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">Windows 10 or 11</text>
+  <rect x="620" y="24" width="360" height="60" rx="6" stroke-dasharray="5 4"/>
+  <text x="800" y="46" font-size="12.5" text-anchor="middle" fill="currentColor" stroke="none">Cloud services, paid per user</text>
+  <text x="800" y="64" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">Claude API (scripts, storyboard, QA) · ai33 voice · Google images</text>
+  <line x1="520" y1="54" x2="620" y2="54" marker-end="url(#a5)"/>
+  <text x="570" y="46" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">own key each</text>
+  <rect x="620" y="124" width="360" height="72" rx="6" stroke="var(--accent)" stroke-width="1.8"/>
+  <text x="800" y="148" font-size="12.5" text-anchor="middle" fill="var(--accent)" stroke="none" font-weight="600">Shared Google Drive folder</text>
+  <text x="800" y="166" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">channels/&lt;slug&gt;/channel.json · frameworks · style refs</text>
+  <text x="800" y="182" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">voice samples · music · thumbnail templates</text>
+  <line x1="520" y1="160" x2="620" y2="160" marker-start="url(#a5)" marker-end="url(#a5)"/>
+  <text x="570" y="152" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">Drive sync</text>
+  <rect x="620" y="236" width="360" height="54" rx="6" stroke-dasharray="5 4"/>
+  <text x="800" y="258" font-size="12.5" text-anchor="middle" fill="currentColor" stroke="none">YouTube</text>
+  <text x="800" y="275" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">read only through yt-dlp: titles, views, dates, transcripts, thumbnails</text>
+  <line x1="620" y1="262" x2="520" y2="262" marker-end="url(#a5)"/>
+  <text x="570" y="254" font-size="10.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">competitor data</text>
+</svg>
+<figcaption>Code travels one way (GitHub to laptops). Channel data travels both ways through Drive sync. Media never leaves the laptop it was made on, except as a finished export.</figcaption>
+</figure>
+<h3>Installing and updating</h3>
+<ul class="tight">
+  <li>One setup file per release, downloaded from GitHub Releases, with a checksum the app verifies before installing.</li>
+  <li>The app checks for updates at launch and every hour; "Update now" installs and reopens the app. A bad release can be withdrawn so no one is offered it.</li>
+  <li>FFmpeg, yt-dlp, the JavaScript runtime it needs, and all fonts are inside the install; nothing else to install by hand. The Windows web view is installed by the setup file if missing.</li>
+  <li>The Doctor screen shows, on every laptop, what is present, what is missing, and how to fix it.</li>
+</ul>
+</section>
+
+<section id="s13">
+<div class="eyebrow">Section 13</div>
+<h2>Where every file lives</h2>
+<p class="lead">Three places, with a clear rule: shared channel data in the Drive folder, per-user settings in the app's data folder, per-video media on the local drive.</p>
+<pre class="tree">Shared Google Drive folder (synced to every laptop)
+  channels/
+    kind-ledger/
+      channel.json              the Channel Setup form, saved
+      frameworks/               uploaded title, script, style frameworks
+      style/                    style sheet image, reference images
+      thumbnail-templates/      extracted layouts from competitor thumbnails
+  voices/                       sample recordings and consent records
+  music/                        licensed tracks with their licence files
+  assets/                       logos, intro and outro clips
+
+%LOCALAPPDATA%\CashflowStudio   (per user, never shared)
+  settings.json                 folder paths, preferences
+  .env                          API keys for this user only
+  db.sqlite                     job index, research cache, cost log
+  logs/
+
+Local projects folder (per user, never shared)
+  projects/2026-10-09_kind-ledger_why-she-paid-for-strangers/
+    job.json                    stage, modes, approvals, costs, provenance
+    01_research/  02_title/  03_script/  04_storyboard/
+    05_voice/     06_images/  07_edit/    08_export/
+  exports/kind-ledger/          finished videos, thumbnails, metadata</pre>
+</section>
+
+<section id="s14">
+<div class="eyebrow">Section 14</div>
+<h2>Keys, privacy and safety</h2>
+<ul class="tight">
+  <li>API keys are typed once into the Settings screen and stored only on that laptop. They are shown masked, never written to the shared folder, never included in logs or exports.</li>
+  <li>The app's local service listens only on the laptop itself; nothing is reachable from the network.</li>
+  <li>Channel files name the key variable to use, never the key.</li>
+  <li>Only the team's own enrolled voices can be cloned; the consent record travels with the voice.</li>
+  <li>YouTube access is read-only (titles, counts, dates, transcripts, thumbnails); no video is downloaded.</li>
+  <li>Every review decision and override is logged with who, when and why, and exported in the provenance bundle for appeals.</li>
+  <li>Spending guards: per-channel monthly budgets for voice characters and images, and a running cost per video shown on the dashboard.</li>
+</ul>
+</section>
+
+<section id="s15">
+<div class="eyebrow">Section 15</div>
+<h2>Review queue and batch runs</h2>
+<p>Every stage set to <span class="mono">review</span> drops its result into the Review queue with a preview, the checks that ran, and three buttons: approve, edit, redo with a note. Reviewers see one queue across all channels, filtered by channel, stage and age. A batch run creates several videos at once (for example five topics for next week); each video advances on its own until it reaches a review gate, so an overnight run leaves a queue of storyboards ready to approve in the morning. Stage modes can be relaxed to <span class="mono">auto</span> per channel once the team trusts the output, and tightened again at any time.</p>
+</section>
+
+<section id="s16">
+<div class="eyebrow">Section 16</div>
+<h2>Failures, retries and costs</h2>
+<table>
+  <thead><tr><th>Situation</th><th>What the app does</th></tr></thead>
+  <tbody>
+    <tr><td>YouTube asks for sign-in or rate-limits</td><td>Backs off for at least ten minutes, retries with longer pauses, then offers an optional cookie file export; research continues from the cache</td></tr>
+    <tr><td>Claude declines a request (safety filter)</td><td>Retries once with a reworded prompt and a fallback route; otherwise the stage waits for a person with the reason shown</td></tr>
+    <tr><td>Voice tool error or quota reached</td><td>Only the failed sentences are retried; cached sentences are kept; the budget guard warns before the next batch</td></tr>
+    <tr><td>Image fails the quality check</td><td>Regenerated up to three times with the failure reason added; then the scene is flagged for a person</td></tr>
+    <tr><td>Render fails</td><td>Error shown with the FFmpeg message in plain words; proxy and timeline are kept so nothing is lost</td></tr>
+    <tr><td>Laptop closed mid-run</td><td>Every stage writes its files before marking itself done; the job resumes from the last finished stage</td></tr>
+    <tr><td>Two people edit the same channel</td><td>The newer save wins and the previous version is kept in a history folder; the app shows who saved last</td></tr>
+  </tbody>
+</table>
+<h3>Cost per ten-minute video (approximate, excluding subscriptions)</h3>
+<table>
+  <thead><tr><th>Item</th><th>Estimate</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Claude (title, script, storyboard, checks, SEO)</td><td>$0.30 to $0.60</td><td>Covered by the monthly API credit that comes with a Max plan, to be confirmed in the Console</td></tr>
+    <tr><td>Images, about 40 scenes plus thumbnail</td><td>$1 to $2</td><td>Google image models at $0.03 to $0.05 per image; half price in batch mode</td></tr>
+    <tr><td>Voice, about 1,500 words</td><td>depends on the ai33 plan</td><td>Per-sentence caching means edits cost only the changed sentences</td></tr>
+    <tr><td>Rendering, research, captions</td><td>$0</td><td>All local</td></tr>
+  </tbody>
+</table>
+</section>
+
+<section id="s17">
+<div class="eyebrow">Section 17</div>
+<h2>A single video as the editor sees it</h2>
+<ol class="walk">
+  <li>Open the app, pick the channel. The channel already knows its competitors, frameworks, voice and image settings from the one-time setup.</li>
+  <li>Click <span class="mono">New video</span>. Research runs and shows a ranked list of competitor videos that outperformed their channel, with the outlier score, age and a thumbnail. Pick one, or type a topic.</li>
+  <li>Seven title variants appear with scores and reasons. Choose one or edit it. <span class="gate"></span>approve.</li>
+  <li>The script appears in the editor with sections and the originality check result. Read it, fix anything, lock the parts you like. <span class="gate"></span>approve.</li>
+  <li>The storyboard board shows every scene as a card: narration, image prompt, popup text, motion, transition. Change what you want, split or merge scenes. <span class="gate"></span>approve.</li>
+  <li>Voice and images generate in the background. Images that fail the quality check are regenerated automatically; the board fills with thumbnails as they arrive. Replace or lock any image. <span class="gate"></span>approve.</li>
+  <li>A low-resolution preview plays with captions and music. If a cut is wrong, open the timeline editor and fix it, or export the project to your own editor.</li>
+  <li>Final renders (720p, 1080p, 4K) land in the export folder with the thumbnail, the SEO pack and the provenance bundle. <span class="gate"></span>approve, then upload.</li>
+</ol>
+</section>
+
+<section id="s18">
+<div class="eyebrow">Section 18</div>
+<h2>Delivery milestones</h2>
+<table>
+  <thead><tr><th>Milestone</th><th>What arrives</th><th>Done when</th></tr></thead>
+  <tbody>
+    <tr><td>M0 Foundation</td><td>App shell, Channel Setup form, Settings with keys, Doctor</td><td>A channel can be created and saved; Doctor passes</td></tr>
+    <tr><td>M1 Research + Title</td><td>Competitor scanning, outlier ranking, title variants, review gate</td><td>Three competitor URLs give a ranked list and an approved title</td></tr>
+    <tr><td>M2 Script + Storyboard</td><td>Framework ingestion, script with originality check, storyboard board</td><td>A reviewed storyboard exists for a real title</td></tr>
+    <tr><td>M3 Voice + Images</td><td>ai33 adapter, Google image adapter, quality check, popups</td><td>All assets generated and approved for one video</td></tr>
+    <tr><td>M4 Edit + Export</td><td>Timeline, FFmpeg render, presets, thumbnail, SEO pack, provenance</td><td>First complete video from competitor URL to MP4</td></tr>
+    <tr><td>M5 Timeline editor</td><td>Built-in editor, Kdenlive, Resolve and CapCut exports</td><td>An editor fixes a video without leaving the app</td></tr>
+    <tr><td>M6 Scale</td><td>Batch runs, language variants, policy dashboard, installer and auto-update</td><td>Five videos run overnight on a teammate's laptop</td></tr>
+    <tr><td>M7 Optional</td><td>Upload hook, analytics feedback into research</td><td>One click from export to the upload queue</td></tr>
+  </tbody>
+</table>
+</section>
+</div>
