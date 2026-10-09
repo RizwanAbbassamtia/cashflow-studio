@@ -62,8 +62,8 @@ voice:
   monthly_budget_characters: 1000000
 
 images:
-  tool: google_imagen            # google_imagen | flux_fal | flux_replicate | ideogram | openai | leonardo | midjourney | recraft | local | other
-  model: imagen-4
+  tool: google_gemini            # google_gemini | openai | flux_bfl | flux_fal | flux_replicate | ideogram | recraft | leonardo | local | manual | other
+  model: gemini-nano-banana-2.1
   style_guide: >
     Cinematic photo-realism, soft natural light, muted warm palette, shallow depth
     of field, no text, no logos, no real public figures

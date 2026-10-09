@@ -26,7 +26,8 @@ StageMode = Literal["auto", "review", "manual"]
 Priority = Literal[1, 2, 3]  # 1 main competitor, 2 secondary, 3 watch only
 
 FrameworkType = Literal[
-    "title", "script_long", "script_shorts", "scene_prompt", "thumbnail", "seo", "style_guide", "other",
+    "title", "script_long", "script_shorts", "scene_prompt", "thumbnail", "seo", "style_guide",
+    "other",
 ]
 VoiceTool = Literal[
     "minimax", "cartesia", "inworld", "fish_audio", "azure", "google", "local", "other",
@@ -152,7 +153,9 @@ class StageModes(BaseModel):
 class Channel(BaseModel):
     """Everything needed to start work on one channel."""
 
-    slug: str = Field(pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$", description="folder name, derived from the name")
+    slug: str = Field(
+        pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$", description="folder name, derived from the name"
+    )
     channel: ChannelIdentity
     competitors: list[Competitor] = []
     frameworks: list[Framework] = []

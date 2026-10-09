@@ -35,6 +35,7 @@ build/
 
 # Node (editor front-end)
 node_modules/
+frontend/dist/
 .next/
 out/
 *.tsbuildinfo

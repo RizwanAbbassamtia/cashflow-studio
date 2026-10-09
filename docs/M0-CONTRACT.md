@@ -43,8 +43,8 @@ Top level: `slug, channel{...}, competitors[], frameworks[], voice{}, images{}, 
 |--------|------|---------|----------|-------|
 | GET | `/api/system/info` | - | `{version, platform, python, app_data_dir, shared_dir, shared_dir_is_default, projects_dir, exports_dir}` | |
 | GET | `/api/doctor` | - | `{ok: bool, checks: [{id, name, status: "ok"\|"warn"\|"fail", detail, fix_hint}]}` | see checks below |
-| GET | `/api/settings` | - | `{shared_dir, projects_dir, exports_dir, shared_dir_is_default, keys: {NAME: {set: bool, masked: string}}}` | `masked` = first 3 + "..." + last 4 chars, or "" |
-| PUT | `/api/settings` | `{shared_dir?, projects_dir?, exports_dir?, keys?: {NAME: string\|null}}` | same as GET | `null` (or blank) for a path means "back to the default"; `null` deletes a key; raw values are never returned; key names must match `^[A-Z][A-Z0-9_]*$` |
+| GET | `/api/settings` | - | `{shared_dir, projects_dir, exports_dir, shared_dir_is_default, keys: {NAME: {set: bool, masked: string}}}` | `masked` = first 3 + "..." + last 4 chars, or "" when unset or shorter than 8 chars |
+| PUT | `/api/settings` | `{shared_dir?, projects_dir?, exports_dir?, keys?: {NAME: string\|null}}` | same as GET | `null` (or blank) for a path means "back to the default"; `null` (or blank) deletes a key; raw values are never returned, not even inside an error; key names must match `^[A-Z][A-Z0-9_]*$` and may not be one of the app's own `CFS_*` settings or a Windows/Python variable such as `PATH`; a value is one line of at most 4096 characters with no control characters (`422` otherwise and nothing is written) |
 | GET | `/api/channels` | - | `ChannelSummary[]` sorted by name | |
 | POST | `/api/channels` | `Channel` without `slug` (or with) | `201 Channel` | slug derived from `channel.name` with python-slugify if missing; `409` if the slug exists |
 | GET | `/api/channels/{slug}` | - | `Channel` | `404` if missing |
@@ -53,7 +53,13 @@ Top level: `slug, channel{...}, competitors[], frameworks[], voice{}, images{}, 
 | POST | `/api/channels/{slug}/frameworks/upload` | multipart file + `type` field | `Framework` | saves to `channels/<slug>/frameworks/<safe-name>`; returns the framework entry with its `path` (relative to shared_dir) |
 | GET | `/api/channels/validate-url?url=` | - | `{ok, kind: "channel"\|"video"\|"unknown", normalized}` | syntactic check only in M0, no network |
 
-Errors: FastAPI default `{detail: ...}`; validation errors `422` with Pydantic details.
+Errors: always JSON `{detail: ...}`, never a text/plain body. `detail` is a plain-English
+string, or for a `422` from body validation a list of Pydantic `{type, loc, msg}` entries
+(the submitted input is never echoed back). `403` when a request that changes something
+(anything but GET/HEAD/OPTIONS) carries an `Origin` header naming another site: only the
+app's own page (`Origin` equal to the request's loopback `Host`) and the Vite dev server may
+write; requests without an `Origin` header (curl, scripts, tests) pass. Unexpected failures
+are a `500` with a plain-English `detail`.
 
 Known key names (settings page shows these as rows, others can be added):
 `ANTHROPIC_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY, FAL_KEY, REPLICATE_API_TOKEN, IDEOGRAM_API_KEY, MINIMAX_API_KEY, MINIMAX_GROUP_ID, CARTESIA_API_KEY, INWORLD_API_KEY, FISH_AUDIO_API_KEY, AZURE_SPEECH_KEY, AZURE_SPEECH_REGION`.

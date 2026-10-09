@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+/* Dark mode is driven by class="dark" on <html> (see lib/theme.ts), not by the OS setting. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans:
+    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
+
+  --radius-card: 8px;
+
+  /* The brand yellow: fills (buttons, bars, rings) in both themes. For text use accent-text. */
+  --color-accent: #ffc000;
+  --color-accent-hover: #ffd033;
+  --color-accent-ink: #0b1220;
+  --color-navy: #0b1220;
+}
+
+/*
+ * Light theme values. The status and accent-text colours are darker here than in the dark
+ * theme: #ffc000 or #22c55e on a white card is under 2.5:1 contrast, these are 4.5:1 or
+ * better on white, on surface-2 and on the 12-15% badge tints.
+ */
+:root {
+  --cfs-canvas: #f3f5f9;
+  --cfs-surface: #ffffff;
+  --cfs-surface-2: #eef2f7;
+  --cfs-line: #dde3ec;
+  --cfs-line-strong: #c3cddb;
+  --cfs-ink: #0b1220;
+  --cfs-ink-muted: #5b6b85;
+  --cfs-ink-faint: #66758f;
+  --cfs-accent-text: #7a5800;
+  --cfs-ok: #166534;
+  --cfs-warn: #92400e;
+  --cfs-fail: #b91c1c;
+  --cfs-info: #1d4ed8;
+  --cfs-shadow: 0 1px 2px rgb(11 18 32 / 0.06), 0 4px 16px rgb(11 18 32 / 0.04);
+}
+
+/* Dark theme values: deep navy canvas, slightly lighter surfaces, bright status colours */
+.dark {
+  --cfs-canvas: #0b1220;
+  --cfs-surface: #111a2e;
+  --cfs-surface-2: #182340;
+  --cfs-line: #1e2a45;
+  --cfs-line-strong: #2b3a5c;
+  --cfs-ink: #e8edf7;
+  --cfs-ink-muted: #96a3bc;
+  --cfs-ink-faint: #7c8ba3;
+  --cfs-accent-text: #ffc000;
+  --cfs-ok: #22c55e;
+  --cfs-warn: #f59e0b;
+  --cfs-fail: #ef4444;
+  --cfs-info: #60a5fa;
+  --cfs-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 20px rgb(0 0 0 / 0.25);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-canvas: var(--cfs-canvas);
+  --color-surface: var(--cfs-surface);
+  --color-surface-2: var(--cfs-surface-2);
+  --color-line: var(--cfs-line);
+  --color-line-strong: var(--cfs-line-strong);
+  --color-ink: var(--cfs-ink);
+  --color-ink-muted: var(--cfs-ink-muted);
+  --color-ink-faint: var(--cfs-ink-faint);
+  --color-accent-text: var(--cfs-accent-text);
+  --color-ok: var(--cfs-ok);
+  --color-warn: var(--cfs-warn);
+  --color-fail: var(--cfs-fail);
+  --color-info: var(--cfs-info);
+  --shadow-card: var(--cfs-shadow);
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: var(--cfs-canvas);
+    color: var(--cfs-ink);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, #ffc000 45%, transparent);
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--cfs-line-strong) transparent;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* Remove the arrows from number inputs; the forms use plain text-sized boxes. */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  input[type="file"] {
+    display: none;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
