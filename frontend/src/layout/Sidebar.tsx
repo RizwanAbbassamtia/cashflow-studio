@@ -7,8 +7,7 @@ import {
   Search,
   Settings,
   Tv,
-  type LucideIcon,
-} from "lucide-react";
+  type LucideIcon,, Film } from "lucide-react";
 import { NavLink } from "react-router";
 
 import { useSystemInfo } from "../api/system";
@@ -24,6 +23,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/channels", label: "Channels", icon: Tv },
+  { to: "/projects", label: "Projects", icon: Film },
   { to: "/research", label: "Research", icon: Search },
   { to: "/storyboard", label: "Storyboard", icon: LayoutGrid },
   { to: "/editor", label: "Editor", icon: Scissors },

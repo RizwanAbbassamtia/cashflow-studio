@@ -1,4 +1,4 @@
-import { LayoutGrid, ListChecks, Scissors, Search } from "lucide-react";
+import { Scissors } from "lucide-react";
 import { createBrowserRouter, isRouteErrorResponse, Link, RouterProvider, useRouteError } from "react-router";
 
 import { AppShell } from "./layout/AppShell";
@@ -7,6 +7,10 @@ import { ChannelsPage } from "./pages/ChannelsPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { PlaceholderPage } from "./pages/PlaceholderPage";
+import { ProjectPage } from "./pages/ProjectPage";
+import { ProjectsPage } from "./pages/ProjectsPage";
+import { ResearchPage } from "./pages/ResearchPage";
+import { ReviewQueuePage } from "./pages/ReviewQueuePage";
 import { SettingsPage } from "./pages/SettingsPage";
 
 /** Shown when a page throws while rendering, so the app never goes blank. */
@@ -41,32 +45,11 @@ const router = createBrowserRouter([
       { path: "channels/new", element: <ChannelSetupPage />, handle: { title: "Channel Setup" } },
       { path: "channels/:slug", element: <ChannelSetupPage />, handle: { title: "Channel Setup" } },
       { path: "settings", element: <SettingsPage />, handle: { title: "Settings" } },
-      {
-        path: "research",
-        handle: { title: "Research" },
-        element: (
-          <PlaceholderPage
-            title="Research"
-            milestone="M1"
-            icon={Search}
-            summary="Scans each channel's competitors for outlier videos, pulls transcripts and thumbnails, and lets you pick the ideas worth making."
-            meanwhile={{ label: "Add competitors to a channel", to: "/channels" }}
-          />
-        ),
-      },
-      {
-        path: "storyboard",
-        handle: { title: "Storyboard" },
-        element: (
-          <PlaceholderPage
-            title="Storyboard"
-            milestone="M2"
-            icon={LayoutGrid}
-            summary="One card per scene: narration, image prompt, generated image, popup text, motion and transition. Lock a scene and the AI never overwrites it."
-            meanwhile={{ label: "Set image and voice rules per channel", to: "/channels" }}
-          />
-        ),
-      },
+      { path: "research", element: <ResearchPage />, handle: { title: "Research" } },
+      { path: "research/:slug", element: <ResearchPage />, handle: { title: "Research" } },
+      { path: "projects", element: <ProjectsPage />, handle: { title: "Projects" } },
+      { path: "projects/:id", element: <ProjectPage />, handle: { title: "Project" } },
+      { path: "storyboard", element: <ProjectsPage stageFilter="storyboard" />, handle: { title: "Storyboard" } },
       {
         path: "editor",
         handle: { title: "Editor" },
@@ -79,19 +62,7 @@ const router = createBrowserRouter([
           />
         ),
       },
-      {
-        path: "review",
-        handle: { title: "Review" },
-        element: (
-          <PlaceholderPage
-            title="Review"
-            milestone="M5"
-            icon={ListChecks}
-            summary="The queue of stages waiting for a human: approve, edit or send back each title, script, storyboard, image set and export."
-            meanwhile={{ label: "Choose which stages need review per channel", to: "/channels" }}
-          />
-        ),
-      },
+      { path: "review", element: <ReviewQueuePage />, handle: { title: "Review" } },
       { path: "*", element: <NotFoundPage />, handle: { title: "Page not found" } },
     ],
   },

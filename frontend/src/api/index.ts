@@ -4,3 +4,6 @@ export * from "./doctor";
 export * from "./keys";
 export * from "./settings";
 export * from "./system";
+export * from "./projects";
+export * from "./research";
+export * from "./ws";
