@@ -1,0 +1,203 @@
+# Quality and policy gates for the title, script and storyboard stages.
+#
+# severity: block = the stage fails (the reviewer can still override by hand),
+#           warn  = reported in the review panel, the stage continues.
+# source:   the page the rule was checked against; last_verified is the date of that check.
+# parameters: the thresholds gates.py reads. Change them here, not in code.
+
+version: 2026-10-09
+
+rules:
+  # Title -----------------------------------------------------------------------------------
+  - id: title.count
+    title: Seven title options
+    stage: title
+    severity: warn
+    description: The title stage must offer exactly seven options to choose from.
+    source: https://support.google.com/youtube/answer/12340300
+    last_verified: 2026-10-09
+    parameters: { count: 7 }
+
+  - id: title.length
+    title: Titles under 70 characters
+    stage: title
+    severity: warn
+    description: Longer titles are cut off on phones and in search results.
+    source: https://support.google.com/youtube/answer/12340300
+    last_verified: 2026-10-09
+    parameters: { max_chars: 70 }
+
+  - id: title.similarity_source
+    title: Not a copy of the competitor title
+    stage: title
+    severity: warn
+    description: >
+      Reusing a competitor's title is repetitious content under the inauthentic content
+      policy. Measured as the difflib ratio on lower-cased text.
+    source: https://support.google.com/youtube/answer/1311392
+    last_verified: 2026-10-09
+    parameters: { max_ratio: 0.8 }
+
+  - id: title.similarity_history
+    title: Not a repeat of a recent channel title
+    stage: title
+    severity: warn
+    description: Near-identical titles across a channel's own videos read as mass-produced.
+    source: https://support.google.com/youtube/answer/1311392
+    last_verified: 2026-10-09
+    parameters: { max_ratio: 0.8, history_size: 30 }
+
+  - id: title.keywords
+    title: Keeps a proven keyword
+    stage: title
+    severity: warn
+    description: Every option keeps at least one keyword from the source title.
+    source: https://support.google.com/youtube/answer/12340300
+    last_verified: 2026-10-09
+    parameters: { min_keywords: 1 }
+
+  - id: title.recommendable
+    title: At least one option passes every check
+    stage: title
+    severity: block
+    description: >
+      An option that failed a check cannot be the recommended one; when every option fails,
+      the stage stops and asks for a redo.
+    source: internal
+    last_verified: 2026-10-09
+    parameters: {}
+
+  # Script ----------------------------------------------------------------------------------
+  - id: script.ngram_source
+    title: Original wording versus the competitor transcript
+    stage: script
+    severity: block
+    description: >
+      Share of the script's 8-word sequences that also occur in the competitor transcript.
+      Copied or lightly paraphrased narration is repetitious, inauthentic content.
+    source: https://support.google.com/youtube/answer/1311392
+    last_verified: 2026-10-09
+    parameters: { n: 8, max_overlap: 0.02 }
+
+  - id: script.ngram_history
+    title: Original wording versus the channel's recent scripts
+    stage: script
+    severity: block
+    description: Highest 8-word overlap with any of the channel's last 30 scripts.
+    source: https://support.google.com/youtube/answer/1311392
+    last_verified: 2026-10-09
+    parameters: { n: 8, max_overlap: 0.05, history_size: 30 }
+
+  - id: script.advisory_persona
+    title: Narrator is not an adviser
+    stage: script
+    severity: block
+    description: >
+      The narrator must not pose as a medical, financial or legal professional or tell the
+      viewer what to do with their health, money or legal matters.
+    source: https://support.google.com/youtube/answer/6162278
+    last_verified: 2026-10-09
+    parameters: {}
+
+  - id: script.word_count
+    title: Length within 15% of the target
+    stage: script
+    severity: block
+    description: Word count within plus or minus 15 percent of the target from the speaking rate.
+    source: internal
+    last_verified: 2026-10-09
+    parameters: { tolerance: 0.15 }
+
+  - id: script.title_claim_early
+    title: Title promise appears early
+    stage: script
+    severity: warn
+    description: The title's key claim should appear in the first 20 percent of the script.
+    source: https://support.google.com/youtube/answer/9288567
+    last_verified: 2026-10-09
+    parameters: { first_share: 0.2 }
+
+  - id: script.sensitive_topic
+    title: Advertiser-sensitive subject
+    stage: script
+    severity: warn
+    description: The script centres on a subject that limits ads; reported for the reviewer.
+    source: https://support.google.com/youtube/answer/6162278
+    last_verified: 2026-10-09
+    parameters: {}
+
+  # Storyboard ------------------------------------------------------------------------------
+  - id: storyboard.scene_length
+    title: Scene lengths in band
+    stage: storyboard
+    severity: warn
+    description: 8-12 seconds per scene for long-form, 3-4 seconds for Shorts (estimated).
+    source: internal
+    last_verified: 2026-10-09
+    parameters:
+      long: { min_s: 8.0, max_s: 12.0 }
+      shorts: { min_s: 3.0, max_s: 4.0 }
+      min_share_in_band: 0.8
+
+  - id: storyboard.motion_alternates
+    title: Neighbouring scenes move differently
+    stage: storyboard
+    severity: block
+    description: No two neighbouring scenes use the same motion preset.
+    source: https://support.google.com/youtube/answer/1311392
+    last_verified: 2026-10-09
+    parameters: {}
+
+  - id: storyboard.transition_no_repeat
+    title: No transition used twice in a row
+    stage: storyboard
+    severity: block
+    description: Varied cuts keep the video from reading as templated, mass-produced content.
+    source: https://support.google.com/youtube/answer/1311392
+    last_verified: 2026-10-09
+    parameters: {}
+
+  - id: storyboard.transition_known
+    title: Transitions from the approved list
+    stage: storyboard
+    severity: block
+    description: Only xfade transition names listed in config/transitions.yaml.
+    source: internal
+    last_verified: 2026-10-09
+    parameters: {}
+
+  - id: storyboard.popup_words
+    title: Popups at most six words
+    stage: storyboard
+    severity: block
+    description: Popup text is at most 6 words and never identical to the narration sentence.
+    source: internal
+    last_verified: 2026-10-09
+    parameters: { max_words: 6 }
+
+  - id: storyboard.popup_share
+    title: Enough scenes carry text
+    stage: storyboard
+    severity: block
+    description: At least 35 percent of scenes have a popup or on-screen text.
+    source: internal
+    last_verified: 2026-10-09
+    parameters: { min_share: 0.35 }
+
+  - id: storyboard.prompt_text_free
+    title: Image prompts ask for no text or logos
+    stage: storyboard
+    severity: warn
+    description: >
+      Prompts that ask the image model for words, signs or logos produce unreadable text and
+      brand problems; the app draws all on-image text itself.
+    source: https://support.google.com/youtube/answer/1311392
+    last_verified: 2026-10-09
+    parameters:
+      # Regular expressions (case-insensitive). A prompt fails when one matches; phrases such
+      # as "no text", "text-free" or "without logos" do not match.
+      banned_patterns:
+        - '\b(with|showing|featuring|including|displaying|holding|has|have)\b[^.;]{0,40}\b(text|words|letters|lettering|caption|captions|subtitle|subtitles|logo|logos|headline|slogan)\b(?!-free)'
+        - '\b(that|which) (says|reads|spells)\b'
+        - '\b(sign|banner|poster|screen|board|label) (that )?(reading|saying|with) '
+        - '\bbrand(ed)? logo\b'

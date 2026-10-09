@@ -163,7 +163,7 @@ export function FrameworksTab({ form, mode, slug }: FrameworksTabProps) {
                       <CellError message={cell("name")} />
                     </TD>
                     <TD>
-                      <Input className="font-mono text-[13px]" placeholder="frameworks/title-prompt.txt or https://..." spellCheck={false} invalid={Boolean(cell("path"))} {...register(`frameworks.${index}.path` as const)} />
+                      <Input className="font-mono text-[13px]" placeholder="channels/<channel>/frameworks/title.txt or https://..." spellCheck={false} invalid={Boolean(cell("path"))} {...register(`frameworks.${index}.path` as const)} />
                       <CellError message={cell("path")} />
                     </TD>
                     <TD>

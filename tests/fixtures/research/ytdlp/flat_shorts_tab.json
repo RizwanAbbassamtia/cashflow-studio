@@ -1,0 +1,49 @@
+{
+  "id": "UCFjva5hxOFoj2ViNgSuEQJg",
+  "_type": "playlist",
+  "extractor": "youtube:tab",
+  "extractor_key": "YoutubeTab",
+  "title": "Human Ember - Shorts",
+  "channel": "Human Ember",
+  "channel_id": "UCFjva5hxOFoj2ViNgSuEQJg",
+  "channel_url": "https://www.youtube.com/channel/UCFjva5hxOFoj2ViNgSuEQJg",
+  "uploader": "Human Ember",
+  "uploader_id": "@humanember",
+  "channel_follower_count": 251000,
+  "webpage_url": "https://www.youtube.com/@humanember/shorts",
+  "playlist_count": 2,
+  "entries": [
+    {
+      "_type": "url",
+      "ie_key": "Youtube",
+      "id": "sH0rT000001",
+      "url": "https://www.youtube.com/shorts/sH0rT000001",
+      "title": "He paid for her groceries and ran",
+      "duration": null,
+      "channel_id": "UCFjva5hxOFoj2ViNgSuEQJg",
+      "channel": "Human Ember",
+      "thumbnails": [
+        {"url": "https://i.ytimg.com/vi/sH0rT000001/oar2.jpg", "height": 720, "width": 405}
+      ],
+      "timestamp": 1758585600,
+      "view_count": 180000,
+      "live_status": null
+    },
+    {
+      "_type": "url",
+      "ie_key": "Youtube",
+      "id": "sH0rT000002",
+      "url": "https://www.youtube.com/shorts/sH0rT000002",
+      "title": "The note on the windshield",
+      "duration": 48.0,
+      "channel_id": "UCFjva5hxOFoj2ViNgSuEQJg",
+      "channel": "Human Ember",
+      "thumbnails": [
+        {"url": "https://i.ytimg.com/vi/sH0rT000002/oar2.jpg", "height": 720, "width": 405}
+      ],
+      "timestamp": 1757376000,
+      "view_count": 15000,
+      "live_status": null
+    }
+  ]
+}

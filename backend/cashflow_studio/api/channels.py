@@ -7,6 +7,7 @@ from typing import Annotated
 from fastapi import APIRouter, File, Form, HTTPException, Query, Response, UploadFile
 from pydantic import Field
 
+from ..llm.frameworks import check_framework_path
 from ..models.channel import Channel, ChannelSummary, Framework, FrameworkType
 from ..storage.channel_store import (
     SLUG_PATTERN,
@@ -34,6 +35,21 @@ class ChannelCreate(Channel):
 
 def _not_found(exc: ChannelNotFound) -> HTTPException:
     return HTTPException(status_code=404, detail=str(exc))
+
+
+def _check_frameworks(channel: Channel) -> None:
+    """Framework files must sit inside the shared folder (relative path) or be a web link.
+
+    The stages read these files and send their text to the writing model, so a full path such
+    as ``C:/Users/.../.env`` must never get as far as the channel file.
+    """
+    for index, framework in enumerate(channel.frameworks):
+        problem = check_framework_path(framework.path)
+        if problem is not None:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Framework {index + 1} ('{framework.name}'): {problem}",
+            )
 
 
 def _not_saved(exc: OSError) -> HTTPException:
@@ -66,6 +82,7 @@ def create_channel(body: ChannelCreate, store: ChannelStoreDep) -> Channel:
     except InvalidChannelName as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     channel = Channel.model_validate(body.model_dump(mode="json") | {"slug": slug})
+    _check_frameworks(channel)
     try:
         return store.create(channel)
     except ChannelExists as exc:
@@ -98,6 +115,7 @@ def update_channel(slug: str, body: Channel, store: ChannelStoreDep) -> Channel:
             detail=f"The channel id in the data ('{body.slug}') does not match the one in "
             f"the address ('{slug}').",
         )
+    _check_frameworks(body)
     try:
         return store.update(slug, body)
     except (ChannelNotFound, InvalidSlug) as exc:

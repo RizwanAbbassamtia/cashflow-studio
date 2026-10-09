@@ -110,3 +110,17 @@ def test_relative_folder_is_rejected(client: TestClient) -> None:
     response = client.put("/api/settings", json={"projects_dir": "relative/folder"})
     assert response.status_code == 422
     assert "full folder path" in response.json()["detail"]
+
+
+def test_replacing_a_key_reaches_the_running_pipeline(client: TestClient, monkeypatch) -> None:
+    """The pipeline's model client is rebuilt after a keys-only save, not only after a
+    model or provider change, so a replaced key is used without a restart."""
+    engine = client.app.state.engine
+    before = engine.providers.get("llm")
+    assert before is not None
+    response = client.put(
+        "/api/settings", json={"keys": {"ANTHROPIC_API_KEY": "sk-ant-api03-abcdefghijklmnop-WXYZ"}}
+    )
+    assert response.status_code == 200, response.text
+    after = engine.providers.get("llm")
+    assert after is not None and after is not before

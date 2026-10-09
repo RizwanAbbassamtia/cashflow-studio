@@ -55,8 +55,14 @@ class StageState(BaseModel):
     approved_by: str | None = None
     approved_at: datetime | None = None
     notes: list[str] = []
+    """What the reviewer wrote (approve, redo and skip notes); stages add them to prompts."""
+    pending_edits: dict = {}
+    """Stage edits sent with a redo (for example ``locked_paragraph_ids``); the engine hands
+    them to the stage as ``ctx.edits`` on the next run and clears them once it finished."""
     summary: str = ""
     gate_results: list[dict] = []
+    history: list[str] = []
+    """Provenance, one plain-English line per event: started, finished, approved, redone..."""
 
 
 class StageModes(BaseModel):
@@ -120,3 +126,23 @@ class ProjectCreate(BaseModel):
     format: ProjectFormat = "long"
     source: ProjectSource
     stage_mode_overrides: dict[StageName, StageMode] = {}
+
+
+def status_of(project: Project) -> StageStatus:
+    """The status of the project's current stage (what the list and the pills show)."""
+    state = project.stages.get(project.current_stage)
+    return state.status if state is not None else "pending"
+
+
+def summary_of(project: Project) -> ProjectSummary:
+    return ProjectSummary(
+        id=project.id,
+        channel_slug=project.channel_slug,
+        title=project.title,
+        format=project.format,
+        language=project.language,
+        current_stage=project.current_stage,
+        status=status_of(project),
+        updated_at=project.updated_at,
+        costs_total_usd=project.costs.total_usd,
+    )

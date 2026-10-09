@@ -3,6 +3,7 @@ import { useLocation } from "react-router";
 
 import { ApiKeysCard } from "../components/settings/ApiKeysCard";
 import { DoctorPanel } from "../components/settings/DoctorPanel";
+import { ModelsCard } from "../components/settings/ModelsCard";
 import { PathsCard } from "../components/settings/PathsCard";
 
 export function SettingsPage() {
@@ -22,6 +23,7 @@ export function SettingsPage() {
     <div className="flex flex-col gap-6">
       <PathsCard />
       <ApiKeysCard />
+      <ModelsCard />
       <DoctorPanel />
     </div>
   );

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
 
-import type { Settings, SettingsUpdate } from "../types";
+import { resolveModelSettings, type ModelSettings, type Settings, type SettingsUpdate } from "../types";
 import { api } from "./client";
 import { queryKeys } from "./keys";
 
@@ -28,4 +29,14 @@ export function useUpdateSettings() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.doctor });
     },
   });
+}
+
+/**
+ * The nested `llm`, `research`, `pipeline` and `voice` settings (M2, contract section 11)
+ * with defaults filled in, so screens can rely on every field even on an older backend.
+ */
+export function useModelSettings(): { query: ReturnType<typeof useSettings>; resolved: ModelSettings } {
+  const query = useSettings();
+  const resolved = useMemo(() => resolveModelSettings(query.data), [query.data]);
+  return { query, resolved };
 }

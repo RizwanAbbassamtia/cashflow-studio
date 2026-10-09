@@ -18,6 +18,10 @@ dependencies = [
     "pywebview>=5.0",
     "python-slugify>=8",
     "python-multipart>=0.0.18",
+    "pillow>=10",
+    "pyyaml>=6",
+    "yt-dlp[default]>=2026.8.19",
+    "youtube-transcript-api>=1.2",
 ]
 
 [project.optional-dependencies]
@@ -35,7 +39,7 @@ cfs = "cashflow_studio.cli:app"
 where = ["backend"]
 
 [tool.setuptools.package-data]
-cashflow_studio = ["py.typed"]
+cashflow_studio = ["py.typed", "llm/prompts/*.md", "policy/*.yaml"]
 
 [tool.ruff]
 line-length = 100
@@ -48,3 +52,6 @@ select = ["E", "F", "I", "B", "UP"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["backend"]
+markers = [
+    "live: calls the real Claude API; skipped unless ANTHROPIC_API_KEY is set",
+]

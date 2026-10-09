@@ -1,0 +1,51 @@
+{
+  "id": "aB3dE5fG7hI",
+  "title": "The stranger who paid for every meal in the diner",
+  "description": "In 1994 a man walked into a diner in Ohio and quietly paid for every table.\n\nSubscribe for more true stories.",
+  "duration": 612,
+  "view_count": 523418,
+  "like_count": 21877,
+  "comment_count": 1312,
+  "upload_date": "20250909",
+  "timestamp": 1757401200,
+  "channel_id": "UCFjva5hxOFoj2ViNgSuEQJg",
+  "channel": "Human Ember",
+  "channel_url": "https://www.youtube.com/channel/UCFjva5hxOFoj2ViNgSuEQJg",
+  "channel_follower_count": 251000,
+  "uploader": "Human Ember",
+  "uploader_id": "@humanember",
+  "uploader_url": "https://www.youtube.com/@humanember",
+  "tags": ["kindness", "true story", "diner"],
+  "categories": ["People & Blogs"],
+  "chapters": [
+    {"start_time": 0.0, "end_time": 45.0, "title": "The diner"},
+    {"start_time": 45.0, "end_time": 612.0, "title": "The stranger"}
+  ],
+  "subtitles": {
+    "en": [
+      {"ext": "json3", "url": "https://www.youtube.com/api/timedtext?v=aB3dE5fG7hI&lang=en&fmt=json3", "name": "English"},
+      {"ext": "vtt", "url": "https://www.youtube.com/api/timedtext?v=aB3dE5fG7hI&lang=en&fmt=vtt", "name": "English"}
+    ]
+  },
+  "automatic_captions": {
+    "en-orig": [
+      {"ext": "json3", "url": "https://www.youtube.com/api/timedtext?v=aB3dE5fG7hI&kind=asr&lang=en-orig&fmt=json3", "name": "English (Original)"}
+    ],
+    "en": [
+      {"ext": "json3", "url": "https://www.youtube.com/api/timedtext?v=aB3dE5fG7hI&kind=asr&lang=en&fmt=json3", "name": "English"}
+    ],
+    "es": [
+      {"ext": "json3", "url": "https://www.youtube.com/api/timedtext?v=aB3dE5fG7hI&kind=asr&lang=en&tlang=es&fmt=json3", "name": "Spanish"}
+    ]
+  },
+  "thumbnails": [
+    {"url": "https://i.ytimg.com/vi/aB3dE5fG7hI/hqdefault.jpg", "width": 480, "height": 360, "id": "1"},
+    {"url": "https://i.ytimg.com/vi/aB3dE5fG7hI/maxresdefault.jpg", "width": 1920, "height": 1080, "id": "2"}
+  ],
+  "thumbnail": "https://i.ytimg.com/vi/aB3dE5fG7hI/maxresdefault.jpg",
+  "live_status": "not_live",
+  "language": "en",
+  "webpage_url": "https://www.youtube.com/watch?v=aB3dE5fG7hI",
+  "availability": "public",
+  "extractor": "youtube"
+}

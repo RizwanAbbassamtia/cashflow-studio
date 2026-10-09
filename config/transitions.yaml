@@ -1,0 +1,39 @@
+# Transitions the storyboard may use between scenes. `type` is the FFmpeg xfade transition name
+# (ffmpeg -filter_complex xfade=transition=<type>), `label` is what the editor sees in the app,
+# `duration_s` is the default length of the transition in seconds.
+#
+# The storyboard stage only ever uses types from this list; an unknown type from the model is
+# replaced by `default`. Shorts use duration_s * shorts_duration_factor.
+
+default: fade
+last_scene: fadeblack           # the transition out of the final scene (to black)
+shorts_duration_factor: 0.6
+
+transitions:
+  - { type: fade,        label: "Cross fade",            duration_s: 0.6 }
+  - { type: fadeblack,   label: "Fade through black",    duration_s: 0.8 }
+  - { type: fadewhite,   label: "Fade through white",    duration_s: 0.8 }
+  - { type: dissolve,    label: "Dissolve",              duration_s: 0.7 }
+  - { type: wipeleft,    label: "Wipe left",             duration_s: 0.5 }
+  - { type: wiperight,   label: "Wipe right",            duration_s: 0.5 }
+  - { type: wipeup,      label: "Wipe up",               duration_s: 0.5 }
+  - { type: wipedown,    label: "Wipe down",             duration_s: 0.5 }
+  - { type: slideleft,   label: "Slide left",            duration_s: 0.5 }
+  - { type: slideright,  label: "Slide right",           duration_s: 0.5 }
+  - { type: slideup,     label: "Slide up",              duration_s: 0.5 }
+  - { type: slidedown,   label: "Slide down",            duration_s: 0.5 }
+  - { type: smoothleft,  label: "Smooth wipe left",      duration_s: 0.6 }
+  - { type: smoothright, label: "Smooth wipe right",     duration_s: 0.6 }
+  - { type: smoothup,    label: "Smooth wipe up",        duration_s: 0.6 }
+  - { type: smoothdown,  label: "Smooth wipe down",      duration_s: 0.6 }
+  - { type: circleopen,  label: "Circle open",           duration_s: 0.7 }
+  - { type: circleclose, label: "Circle close",          duration_s: 0.7 }
+  - { type: radial,      label: "Radial sweep",          duration_s: 0.7 }
+  - { type: zoomin,      label: "Zoom in",               duration_s: 0.6 }
+  - { type: pixelize,    label: "Pixelate",              duration_s: 0.5 }
+  - { type: hlslice,     label: "Horizontal slices",     duration_s: 0.5 }
+  - { type: vuslice,     label: "Vertical slices",       duration_s: 0.5 }
+  - { type: diagtl,      label: "Diagonal (top left)",   duration_s: 0.6 }
+  - { type: diagbr,      label: "Diagonal (bottom right)", duration_s: 0.6 }
+  - { type: distance,    label: "Distance blur",         duration_s: 0.7 }
+  - { type: fadegrays,   label: "Fade through grey",     duration_s: 0.8 }

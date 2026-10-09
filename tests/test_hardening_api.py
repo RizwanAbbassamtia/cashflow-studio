@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+from starlette.websockets import WebSocketDisconnect
 
 from cashflow_studio.app import create_app
 from cashflow_studio.models.channel import Channel
@@ -160,6 +161,38 @@ def test_writes_from_another_website_are_refused(client: TestClient, app_env: Ap
 
     # Reads are not blocked here; CORS decides whether the page may see them.
     assert client.get("/api/channels", headers=evil).status_code == 200
+
+
+def test_event_stream_from_another_website_is_refused(client: TestClient) -> None:
+    """CORS does not cover WebSockets: a foreign page must not read the event stream."""
+    with pytest.raises(WebSocketDisconnect) as info:
+        with client.websocket_connect("/api/ws", headers={"Origin": "https://evil.example"}) as ws:
+            ws.receive_json()
+    assert info.value.code == 1008
+    with pytest.raises(WebSocketDisconnect):
+        with client.websocket_connect("/api/ws", headers={"Origin": "null"}) as ws:
+            ws.receive_json()
+    # Without an Origin (tools on this PC) and from the dev server the stream works.
+    with client.websocket_connect("/api/ws") as ws:
+        ws.send_text("ping")
+    with client.websocket_connect("/api/ws", headers={"Origin": "http://localhost:5173"}) as ws:
+        ws.send_text("ping")
+
+
+def test_event_stream_from_the_apps_own_page_passes(app_env: AppEnv) -> None:
+    with TestClient(create_app(), base_url="http://127.0.0.1:8765") as client:
+        # The test client always says Host: testserver on a handshake; the app's page sends
+        # its own loopback host, which is what the guard compares the Origin with.
+        with client.websocket_connect(
+            "/api/ws", headers={"Origin": "http://127.0.0.1:8765", "Host": "127.0.0.1:8765"}
+        ) as ws:
+            ws.send_text("ping")
+        with pytest.raises(WebSocketDisconnect):
+            with client.websocket_connect(
+                "/api/ws",
+                headers={"Origin": "http://evil.example:8765", "Host": "evil.example:8765"},
+            ) as ws:
+                ws.receive_json()
 
 
 def test_writes_from_the_apps_own_page_and_the_dev_server_pass(app_env: AppEnv) -> None:

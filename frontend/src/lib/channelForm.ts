@@ -91,10 +91,37 @@ export const competitorSchema = z.object({
   last_scanned: z.string().nullable(),
 });
 
+const FRAMEWORK_SUFFIXES = [".txt", ".md", ".markdown", ".text", ".pdf"];
+
+/**
+ * Why a framework path is not acceptable, or null when it is. Mirrors the server rule
+ * (llm/frameworks.py): a web link, or a path relative to the shared folder that names a
+ * text or PDF file. The file's text is sent to the writing model, so nothing outside the
+ * shared folder may ever be named here.
+ */
+export function frameworkPathProblem(value: string): string | null {
+  const text = value.trim().replace(/^"|"$/g, "");
+  if (!text || /^[a-z][a-z0-9+.-]*:\/\//i.test(text)) return null;
+  if (/^(?:[a-zA-Z]:|\\\\|\/\/|\/|\\)/.test(text)) {
+    return "Use a path inside the shared folder, such as channels/<channel>/frameworks/title.txt, or a web link.";
+  }
+  const parts = text.split(/[\\/]+/).filter(Boolean);
+  if (parts.includes("..")) return "The path must stay inside the shared folder ('..' is not allowed).";
+  const name = parts[parts.length - 1] ?? "";
+  if (name.startsWith(".")) return "Hidden files cannot be used as frameworks.";
+  const dot = name.lastIndexOf(".");
+  const suffix = dot >= 0 ? name.slice(dot).toLowerCase() : "";
+  if (!FRAMEWORK_SUFFIXES.includes(suffix)) return `Frameworks must be text or PDF files (${FRAMEWORK_SUFFIXES.join(", ")}).`;
+  return null;
+}
+
 export const frameworkSchema = z.object({
   type: z.enum(FRAMEWORK_TYPES),
   name: shortText("a name"),
-  path: freeText,
+  path: freeText.superRefine((value, ctx) => {
+    const problem = frameworkPathProblem(value);
+    if (problem) ctx.addIssue({ code: z.ZodIssueCode.custom, message: problem });
+  }),
   version: freeText,
   formats: videoFormatEnum,
   notes: freeText,

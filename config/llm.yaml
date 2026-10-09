@@ -1,0 +1,70 @@
+# Which Claude model each task uses, how hard it thinks, and what a call costs.
+#
+# The Settings screen can override `models` and `effort` per task (settings.json, key "llm").
+# CFS_LLM_PROVIDER=mock replaces the real client with the offline mock for tests and demos.
+# Model ids are used exactly as written here; never append dates.
+
+provider: anthropic            # anthropic | mock (the CFS_LLM_PROVIDER environment variable wins)
+
+models:
+  title: claude-opus-5-5
+  script: claude-opus-5-5
+  speech_normalize: claude-sonnet-5-5
+  storyboard: claude-sonnet-5-5
+  transcript_summary: claude-sonnet-5-5
+  policy_check: claude-sonnet-5-5
+  summary: claude-sonnet-5-5
+  classification: claude-sonnet-5-5
+  image_qa: claude-sonnet-5-5
+
+# Thinking depth. Goes into output_config.effort; thinking itself is adaptive (never configured).
+effort:
+  title: high
+  script: high
+  speech_normalize: medium
+  storyboard: medium
+  transcript_summary: medium
+  policy_check: low
+  summary: medium
+  classification: low
+  image_qa: low
+
+max_tokens:
+  default: 16000
+  script: 64000                # streamed
+  storyboard: 32000            # streamed
+
+# Tasks whose answers are long enough to stream (the final message is taken at the end).
+stream_tasks: [script, storyboard]
+
+# Server-side fallback: when Claude's safety classifiers decline a request, Anthropic re-runs it
+# on a recommended fallback model inside the same call.
+fallback:
+  enabled: true
+  beta: server-side-fallback-2026-07-01
+  mode: default
+
+# Framework text and style guides are cached for this long (the first system block).
+cache_ttl: 1h
+
+# USD per million tokens. cache_read is a cache hit; cache_write_5m / cache_write_1h is what
+# writing the cache costs for a 5-minute or 1-hour TTL.
+prices_usd_per_million:
+  claude-opus-5-5:
+    input: 4.00
+    output: 20.00
+    cache_read: 0.20
+    cache_write_5m: 5.00
+    cache_write_1h: 8.00
+  claude-sonnet-5-5:
+    input: 2.00
+    output: 10.00
+    cache_read: 0.20
+    cache_write_5m: 2.50
+    cache_write_1h: 4.00
+  claude-haiku-4-5:
+    input: 1.00
+    output: 5.00
+    cache_read: 0.10
+    cache_write_5m: 1.25
+    cache_write_1h: 2.00

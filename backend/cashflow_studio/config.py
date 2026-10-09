@@ -14,20 +14,60 @@ settings are read, so a tool path saved there counts too.
 
 from __future__ import annotations
 
+import logging
 import os
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
-from pydantic import Field, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .storage.settings_store import SettingsStore
 
+log = logging.getLogger(__name__)
+
 SETTINGS_FILE = "settings.json"
 ENV_FILE = ".env"
 PATH_KEYS = ("shared_dir", "projects_dir", "exports_dir")
+NESTED_KEYS = ("llm", "research", "pipeline", "voice")
+"""The nested objects of settings.json from docs/M1-M2-CONTRACT.md section 11."""
 HOST = "127.0.0.1"
+
+ResearchProviderName = Literal["yt-dlp", "mock"]
+EffortLevel = Literal["low", "medium", "high"]
+
+
+class LlmSettings(BaseModel):
+    """Per-task overrides of ``config/llm.yaml`` (same keys: ``models``, ``effort``)."""
+
+    models: dict[str, str] = {}
+    effort: dict[str, EffortLevel] = {}
+    max_tokens: dict[str, int] = {}
+
+
+class ResearchSettings(BaseModel):
+    provider: ResearchProviderName = "yt-dlp"
+    """Where competitor videos come from; ``CFS_RESEARCH_PROVIDER`` wins when set."""
+    llm_rerank: bool = False
+    """Let Claude re-rank the top candidates by fit to the niche (one small call per scan)."""
+
+
+class PipelineSettings(BaseModel):
+    max_parallel_projects: int = Field(default=2, ge=1, le=8)
+
+
+class VoiceSettings(BaseModel):
+    speaking_rate_wpm: int | None = Field(default=None, ge=80, le=260)
+    """Words per minute for every language; ``None`` means the table in config/voice.yaml."""
+
+
+NESTED_MODELS: dict[str, type[BaseModel]] = {
+    "llm": LlmSettings,
+    "research": ResearchSettings,
+    "pipeline": PipelineSettings,
+    "voice": VoiceSettings,
+}
 
 
 def _home() -> Path:
@@ -88,6 +128,12 @@ class Settings(BaseSettings):
     ffmpeg_path: str = Field(default="", validation_alias="FFMPEG_PATH")
     ffprobe_path: str = Field(default="", validation_alias="FFPROBE_PATH")
 
+    # Models and providers (settings.json nested keys, Settings > Models and providers).
+    llm: LlmSettings = LlmSettings()
+    research: ResearchSettings = ResearchSettings()
+    pipeline: PipelineSettings = PipelineSettings()
+    voice: VoiceSettings = VoiceSettings()
+
     @field_validator("app_data_dir", mode="before")
     @classmethod
     def _app_data_dir_default(cls, value: Any) -> Any:
@@ -139,6 +185,20 @@ class Settings(BaseSettings):
     def env_file(self) -> Path:
         return self.app_data_dir / ENV_FILE
 
+    @property
+    def research_provider(self) -> str:
+        """The research provider id the research package understands (``ytdlp`` or ``mock``)."""
+        return "mock" if self.research.provider == "mock" else "ytdlp"
+
+    @property
+    def max_parallel_projects(self) -> int:
+        return self.pipeline.max_parallel_projects
+
+    @property
+    def speaking_rate_override(self) -> int | None:
+        """A speaking rate chosen in Settings, or ``None`` for the per-language table."""
+        return self.voice.speaking_rate_wpm
+
     def paths_as_dict(self) -> dict[str, str | None]:
         """The user's folder choices in the form saved to settings.json."""
         return {
@@ -146,6 +206,10 @@ class Settings(BaseSettings):
             "projects_dir": str(self.projects_dir),
             "exports_dir": str(self.exports_dir),
         }
+
+    def nested_as_dict(self) -> dict[str, dict[str, Any]]:
+        """The ``llm``, ``research``, ``pipeline`` and ``voice`` objects of settings.json."""
+        return {key: getattr(self, key).model_dump(mode="json") for key in NESTED_KEYS}
 
     def ensure_dirs(self) -> list[str]:
         """Create the folders the app needs. Never raises; returns plain-English problems."""
@@ -164,6 +228,26 @@ class Settings(BaseSettings):
         return problems
 
 
+def nested_overrides(saved: dict[str, Any]) -> dict[str, BaseModel]:
+    """Validate the nested objects of settings.json one by one.
+
+    A section that does not validate (a hand-edited file, an older app version) is logged and
+    replaced by its defaults; it never stops the app from starting.
+    """
+    overrides: dict[str, BaseModel] = {}
+    for key, model in NESTED_MODELS.items():
+        value = saved.get(key)
+        if not isinstance(value, dict):
+            continue
+        try:
+            overrides[key] = model.model_validate(value)
+        except ValidationError as exc:
+            log.warning(
+                "Ignoring the '%s' section of settings.json (using defaults): %s", key, exc
+            )
+    return overrides
+
+
 def load_settings() -> Settings:
     """Build the effective settings: env vars win, then settings.json, then defaults."""
     bootstrap = Settings()
@@ -177,4 +261,5 @@ def load_settings() -> Settings:
             continue  # an environment variable always wins over settings.json
         if key in saved:
             overrides[key] = saved[key]
+    overrides.update(nested_overrides(store.read_sections()))
     return Settings(**overrides)

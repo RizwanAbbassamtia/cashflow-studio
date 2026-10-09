@@ -221,3 +221,25 @@ def test_validate_url_classifies_links_without_network(client: TestClient) -> No
     for url in ("https://example.com/watch?v=abc", "not a link", "https://www.youtube.com/"):
         body = client.get("/api/channels/validate-url", params={"url": url}).json()
         assert body["ok"] is False and body["kind"] == "unknown", url
+
+
+def test_framework_path_outside_the_shared_folder_is_refused(client: TestClient) -> None:
+    """A framework file is read and sent to the writing model: it must stay in the shared folder."""
+    body = channel_payload("Kind Ledger")
+    body["frameworks"] = [
+        {"type": "title", "name": "Sneaky", "path": "C:/Users/me/AppData/Local/CashflowStudio/.env"}
+    ]
+    response = client.post("/api/channels", json=body)
+    assert response.status_code == 422
+    assert "shared folder" in response.json()["detail"] and "Sneaky" in response.json()["detail"]
+
+    assert client.post("/api/channels", json=channel_payload("Kind Ledger")).status_code == 201
+    saved = client.get("/api/channels/kind-ledger").json()
+    for bad in ("../app/.env", "channels/kind-ledger/.env", "channels/kind-ledger/tool.exe"):
+        saved["frameworks"] = [{"type": "title", "name": "Bad", "path": bad}]
+        assert client.put("/api/channels/kind-ledger", json=saved).status_code == 422, bad
+    saved["frameworks"] = [
+        {"type": "title", "name": "Doc", "path": "https://docs.google.com/document/d/abc"},
+        {"type": "script_long", "name": "Ok", "path": "channels/kind-ledger/frameworks/s.md"},
+    ]
+    assert client.put("/api/channels/kind-ledger", json=saved).status_code == 200

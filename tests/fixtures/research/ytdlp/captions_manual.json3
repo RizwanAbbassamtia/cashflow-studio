@@ -1,0 +1,10 @@
+{
+  "wireMagic": "pb3",
+  "pens": [{}],
+  "wsWinStyles": [{}],
+  "wpWinPositions": [{}],
+  "events": [
+    {"tStartMs": 1000, "dDurationMs": 2000, "segs": [{"utf8": "Hello there friends"}]},
+    {"tStartMs": 3000, "dDurationMs": 1500, "segs": [{"utf8": "welcome back"}]}
+  ]
+}

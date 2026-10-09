@@ -1,0 +1,38 @@
+# Research defaults for Cashflow Studio. Values here apply to every channel; edit and
+# restart the app. Anything missing falls back to the same defaults built into the code
+# (backend/cashflow_studio/research/config.py).
+
+tabs: [videos, shorts]          # channel tabs to list on "Scan now"
+max_videos_per_channel: 200     # newest videos read per tab
+cache_minutes: 60               # a tab is not listed again within this time unless forced
+
+# Outlier maths (research/outliers.py)
+neighbours_before: 10           # videos newer than the one scored, used for its baseline
+neighbours_after: 10            # videos older than it
+baseline_min_age_days: 7        # neighbours younger than this do not count (views still growing)
+labels:                         # outlier_score thresholds, highest first
+  one_of_ten: 10
+  strong: 5
+  notable: 3
+
+# Videos that are never picked (they still appear in the list with the reason)
+exclude:
+  min_age_days: 3               # too new to judge
+  long_min_seconds: 240         # long-form band: 4 to 40 minutes
+  long_max_seconds: 2400
+  shorts_max_seconds: 180       # Shorts band: up to 3 minutes
+  live_streams: true
+  premieres: true
+  used_before: true             # already made by this channel
+
+# The AI pick (research/picker.py)
+picker:
+  strategy: top_outlier_fresh
+  fresh_days: 90                # prefer videos from the last 90 days
+  llm_rerank_top: 10            # how many candidates the optional LLM rerank looks at
+
+# yt-dlp behaviour (research/ytdlp_client.py)
+sleep_interval_requests: 0.75   # seconds between requests while listing
+backoff_minutes: [10, 20, 40, 60]   # waits after "slow down" answers; then research pauses
+http_timeout_seconds: 20
+transcript_fallback_languages: [en]

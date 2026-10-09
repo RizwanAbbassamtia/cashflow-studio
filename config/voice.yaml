@@ -1,0 +1,24 @@
+# Speaking rates used to turn a target length into a word count (script stage) and to estimate
+# scene timings (storyboard stage) before the real voice timing arrives in M3.
+#
+# Words per minute of a calm narrator. The script stage uses the channel's language; a language
+# that is not listed uses default_wpm.
+
+speaking_rate:
+  default_wpm: 150
+  by_language:
+    English: 150
+    Spanish: 160
+    Portuguese: 155
+    French: 160
+    Italian: 160
+    German: 140
+    Russian: 140
+    Turkish: 140
+    Indonesian: 150
+    Vietnamese: 150
+    Hindi: 140
+    Urdu: 140
+    Arabic: 130
+    Japanese: 150
+    Korean: 140

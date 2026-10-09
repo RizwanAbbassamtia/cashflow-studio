@@ -1,0 +1,21 @@
+{
+  "wireMagic": "pb3",
+  "pens": [{}],
+  "wsWinStyles": [{}, {"mhModeHint": 2, "juJustifCode": 0, "sdScrollDir": 3}],
+  "wpWinPositions": [{}, {"apPoint": 6, "ahHorPos": 20, "avVerPos": 100, "rcRows": 2, "ccCols": 40}],
+  "events": [
+    {"tStartMs": 0, "dDurationMs": 6420, "id": 1, "wpWinPosId": 1, "wsWinStyleId": 1},
+    {"tStartMs": 120, "dDurationMs": 3400, "wWinId": 1, "segs": [
+      {"utf8": "She", "acAsrConf": 0},
+      {"utf8": " found", "tOffsetMs": 400, "acAsrConf": 0},
+      {"utf8": " the", "tOffsetMs": 800, "acAsrConf": 0},
+      {"utf8": " wallet", "tOffsetMs": 1000, "acAsrConf": 0}
+    ]},
+    {"tStartMs": 3510, "dDurationMs": 10, "wWinId": 1, "aAppend": 1, "segs": [{"utf8": "\n"}]},
+    {"tStartMs": 3520, "dDurationMs": 2900, "wWinId": 1, "segs": [
+      {"utf8": "on", "acAsrConf": 0},
+      {"utf8": " a", "tOffsetMs": 300, "acAsrConf": 0},
+      {"utf8": " Tuesday", "tOffsetMs": 500, "acAsrConf": 0}
+    ]}
+  ]
+}

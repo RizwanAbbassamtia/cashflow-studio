@@ -25,6 +25,7 @@ from .api import channels, doctor, jobs, projects, research, system, ws
 from .api import settings as settings_api
 from .config import Settings, load_settings
 from .origin_guard import SameOriginGuard
+from .pipeline.bootstrap import build_engine
 
 # Only the Vite dev server may call the API from another origin.
 DEV_ORIGINS = ["http://127.0.0.1:5173", "http://localhost:5173"]
@@ -68,6 +69,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         redoc_url=None,
     )
     app.state.settings = settings
+    app.state.engine = build_engine(settings)
 
     # The guard sits inside CORS: preflights are answered by CORS, every other request that
     # changes something must come from this server's own page or the dev server.

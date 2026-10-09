@@ -25,6 +25,8 @@ log = logging.getLogger(__name__)
 
 KEY_NAME_RE = re.compile(r"^[A-Z][A-Z0-9_]*$")
 PATH_KEYS = ("shared_dir", "projects_dir", "exports_dir")
+SECTION_KEYS = ("llm", "research", "pipeline", "voice")
+"""Nested objects in settings.json (Settings > Models and providers); see config.py."""
 
 # Real keys are a few hundred characters at most. Windows refuses an environment entry over
 # 32767 characters, and a saved value that long would stop the app from starting.
@@ -243,14 +245,17 @@ class SettingsStore:
 
     # settings.json --------------------------------------------------------------------
 
-    def read_paths(self) -> dict[str, str | None]:
-        """Folder choices saved earlier. Missing or unreadable file -> empty dict."""
+    def read_all(self) -> dict[str, Any]:
+        """The whole settings.json mapping. Missing or unreadable file -> empty dict."""
         try:
             data: Any = json.loads(self.settings_file.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             return {}
-        if not isinstance(data, dict):
-            return {}
+        return data if isinstance(data, dict) else {}
+
+    def read_paths(self) -> dict[str, str | None]:
+        """Folder choices saved earlier. Missing or unreadable file -> empty dict."""
+        data = self.read_all()
         paths: dict[str, str | None] = {}
         for key in PATH_KEYS:
             value = data.get(key)
@@ -258,10 +263,35 @@ class SettingsStore:
                 paths[key] = value
         return paths
 
-    def write_paths(self, paths: dict[str, str | None]) -> None:
-        clean = {key: paths.get(key) for key in PATH_KEYS}
+    def read_sections(self) -> dict[str, dict[str, Any]]:
+        """The nested ``llm`` / ``research`` / ``pipeline`` / ``voice`` objects that exist."""
+        data = self.read_all()
+        return {
+            key: value
+            for key, value in data.items()
+            if key in SECTION_KEYS and isinstance(value, dict)
+        }
+
+    def _write_merged(self, changes: dict[str, Any]) -> None:
+        """Replace the given top-level keys and keep every other key in the file."""
         with LOCK:
-            atomic_write_text(self.settings_file, json.dumps(clean, indent=2) + "\n")
+            data = self.read_all()
+            data.update(changes)
+            atomic_write_text(self.settings_file, json.dumps(data, indent=2) + "\n")
+
+    def write_paths(self, paths: dict[str, str | None]) -> None:
+        """Save the three folders; the nested model settings in the file are kept."""
+        self._write_merged({key: paths.get(key) for key in PATH_KEYS})
+
+    def write_sections(self, sections: dict[str, dict[str, Any]]) -> None:
+        """Save one or more nested objects whole; the folders and other sections are kept."""
+        clean = {
+            key: value
+            for key, value in sections.items()
+            if key in SECTION_KEYS and isinstance(value, dict)
+        }
+        if clean:
+            self._write_merged(clean)
 
     # .env -----------------------------------------------------------------------------
 

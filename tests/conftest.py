@@ -92,7 +92,11 @@ def channel_payload(name: str = "Kind Ledger", **overrides: Any) -> dict[str, An
             {"name": "The Gentle Hour", "url": "https://www.youtube.com/@thegentlehour"},
         ],
         "frameworks": [
-            {"type": "title", "name": "Title Writing Prompt", "path": "F:/Frame work/title.txt"}
+            {
+                "type": "title",
+                "name": "Title Writing Prompt",
+                "path": "channels/kind-ledger/frameworks/title.txt",
+            }
         ],
         "voice": {"tool": "fish_audio", "api_key_env": "FISH_AUDIO_API_KEY"},
         "images": {"tool": "google_gemini", "api_key_env": "GEMINI_API_KEY"},
