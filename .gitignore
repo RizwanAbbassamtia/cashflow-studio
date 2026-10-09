@@ -1,0 +1,47 @@
+# Secrets and local settings
+.env
+.env.*
+!.env.example
+config/local.*
+*.key
+*.pem
+
+# Generated media and per-video work folders (kept on each user's local drive)
+projects/
+exports/
+cache/
+*.mp4
+*.mov
+*.wav
+*.mp3
+*.png
+*.jpg
+*.jpeg
+*.webp
+!docs/**/*.png
+!templates/**/*.png
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Node (editor front-end)
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+~$*.xlsx

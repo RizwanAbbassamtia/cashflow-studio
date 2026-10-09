@@ -1,0 +1,100 @@
+# Example channel configuration. This is what the app produces when it imports a
+# channel master sheet (templates/channel-master-sheet.xlsx). Values here are examples.
+# Never put API keys in this file; name the .env variable instead.
+
+channel:
+  name: Kind Ledger
+  url: https://www.youtube.com/channel/UCxxxxxxxxxxxxxxxxxxxxxx
+  id: null                       # filled by the app
+  language: English
+  secondary_languages: []
+  niche: Kindness and emotional stories
+  audience: Adults 35+, English-speaking, watches at night
+  formats: both                  # long | shorts | both
+  long_form_minutes: 10
+  shorts_seconds: 45
+  videos_per_week: 5
+  export_folder: D:\CashflowStudio\exports\kind-ledger
+  music_folder: D:\CashflowStudio\music\calm
+  brand_colors: ["#1F3864", "#FFC000", "#FFFFFF"]
+  caption_style: Bold white, black outline, bottom centre, 2 lines max
+  owner: Imran
+  browser_profile: 84
+  status: setup                  # setup | active | paused | archived
+
+competitors:
+  - name: Human Ember
+    url: https://www.youtube.com/channel/UCFjva5hxOFoj2ViNgSuEQJg
+    id: null                     # filled by the app
+    language: English
+    priority: 1                  # 1 main, 2 secondary, 3 watch only
+    why: Same niche, 3x our views on story videos
+  - name: The Gentle Hour
+    url: https://www.youtube.com/@thegentlehour
+    id: null
+    language: English
+    priority: 2
+    why: Strong titles, weak thumbnails
+
+frameworks:
+  - type: title                  # title | script_long | script_shorts | scene_prompt | thumbnail | seo | style_guide
+    name: Title Writing Prompt
+    path: F:\Frame work\Title Writing Pormpt.txt
+    version: v1
+    formats: both
+  - type: script_long
+    name: Leafmodo Channel Content Framework
+    path: F:\Frame work\Leafmodo_Channel_Content_Framework.pdf
+    version: v1
+    formats: long
+
+voice:
+  tool: fish_audio               # fish_audio | minimax | cartesia | playai | resemble | azure | google | hume | local | other
+  clone_ref: https://fish.audio/m/xxxxxxxxxxxxxxxx   # clone link or voice ID
+  name: Daniel - warm narrator
+  language: English
+  model: s1
+  speed: 1.0
+  style: calm, warm, slow at emotional moments
+  sample_path: D:\CashflowStudio\voices\daniel-sample.mp3
+  returns_word_timestamps: false # if false the app aligns the audio with Whisper
+  api_key_env: FISH_AUDIO_API_KEY
+  monthly_budget_characters: 1000000
+
+images:
+  tool: google_imagen            # google_imagen | flux_fal | flux_replicate | ideogram | openai | leonardo | midjourney | recraft | local | other
+  model: imagen-4
+  style_guide: >
+    Cinematic photo-realism, soft natural light, muted warm palette, shallow depth
+    of field, no text, no logos, no real public figures
+  negative_rules: no watermarks, no distorted hands, no extra fingers, no gibberish text
+  aspect_long: "16:9"
+  aspect_shorts: "9:16"
+  resolution: 1920x1080
+  reference_folder: D:\CashflowStudio\refs\kind-ledger
+  on_image_text: app_popups      # app_popups = text drawn by the app, never by the image model
+  popup_style: Rounded box, brand yellow, bold Arial 64px, slide-in from left
+  api_key_env: GEMINI_API_KEY
+  monthly_budget_images: 2000
+
+thumbnail:
+  template_videos:
+    - https://www.youtube.com/watch?v=xxxxxxxxxxx
+  headline_font: Anton
+  headline_colors: "#FFFFFF on #1F3864, accent #FFC000"
+  max_headline_words: 4
+  face: none                     # none | face | ai_character
+  must_include: one emotional subject, strong contrast, one accent colour
+  must_avoid: clutter, more than 2 text blocks, real people, logos
+  sizes: ["1280x720", "1080x1920"]
+
+stage_modes:                     # auto | review | manual
+  research: review
+  title: review
+  script: review
+  storyboard: review
+  voice: auto
+  images: review
+  edit: review
+  export: review
+reviewer: Imran
