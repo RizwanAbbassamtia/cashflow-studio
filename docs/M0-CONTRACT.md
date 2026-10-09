@@ -43,8 +43,8 @@ Top level: `slug, channel{...}, competitors[], frameworks[], voice{}, images{}, 
 |--------|------|---------|----------|-------|
 | GET | `/api/system/info` | - | `{version, platform, python, app_data_dir, shared_dir, shared_dir_is_default, projects_dir, exports_dir}` | |
 | GET | `/api/doctor` | - | `{ok: bool, checks: [{id, name, status: "ok"\|"warn"\|"fail", detail, fix_hint}]}` | see checks below |
-| GET | `/api/settings` | - | `{shared_dir, projects_dir, exports_dir, keys: {NAME: {set: bool, masked: string}}}` | `masked` = first 3 + "..." + last 4 chars, or "" |
-| PUT | `/api/settings` | `{shared_dir?, projects_dir?, exports_dir?, keys?: {NAME: string\|null}}` | same as GET | `null` deletes a key; raw values are never returned; key names must match `^[A-Z][A-Z0-9_]*$` |
+| GET | `/api/settings` | - | `{shared_dir, projects_dir, exports_dir, shared_dir_is_default, keys: {NAME: {set: bool, masked: string}}}` | `masked` = first 3 + "..." + last 4 chars, or "" |
+| PUT | `/api/settings` | `{shared_dir?, projects_dir?, exports_dir?, keys?: {NAME: string\|null}}` | same as GET | `null` (or blank) for a path means "back to the default"; `null` deletes a key; raw values are never returned; key names must match `^[A-Z][A-Z0-9_]*$` |
 | GET | `/api/channels` | - | `ChannelSummary[]` sorted by name | |
 | POST | `/api/channels` | `Channel` without `slug` (or with) | `201 Channel` | slug derived from `channel.name` with python-slugify if missing; `409` if the slug exists |
 | GET | `/api/channels/{slug}` | - | `Channel` | `404` if missing |
