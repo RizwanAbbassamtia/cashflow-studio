@@ -24,7 +24,7 @@ export async function uploadProjectFile(
   scene?: number,
 ): Promise<UploadResult> {
   const form = new FormData();
-  form.append("file", file);
+  form.append("file", file, file.name);
   if (scene !== undefined) form.append("scene", String(scene));
-  return api.postForm<UploadResult>(`/api/projects/${encodeURIComponent(projectId)}/upload/${stage}`, form);
+  return api.upload<UploadResult>(`/api/projects/${encodeURIComponent(projectId)}/upload/${stage}`, form);
 }
