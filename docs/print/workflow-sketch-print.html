@@ -106,6 +106,18 @@
   section#s1 { break-before: auto; page-break-before: auto; }
   header { break-after: page; page-break-after: always; }
   figure svg { min-width: 0; }
+  #s4 figure svg { width: 152mm; height: auto; margin: 0 auto; }
+  #s7 figure svg { width: 210mm; height: auto; margin: 0 auto; }
+  h2, h3, .eyebrow, p.lead { break-after: avoid; page-break-after: avoid; }
+  .spec { display: block; }
+  .spec .card { display: inline-block; vertical-align: top; width: 48.6%; margin: 0 1.2% 10px 0; box-sizing: border-box; }
+  .spec .card:nth-child(2n) { margin-right: 0; }
+  .card dl { grid-template-columns: 78px 1fr; font-size: 12.5px; }
+  table { font-size: 12px; } th, td { padding: 6px 8px; }
+  .note { break-before: avoid; }
+  #s2 figure svg, #s7 figure svg, #s9 figure svg, #s12 figure svg { width: 100%; }
+  figure { padding: 8px 10px 6px; }
+  figcaption { margin-top: 6px; }
   h2 { font-size: 19px; }
   nav.toc ol { columns: 3; }
   a { color: inherit; }
