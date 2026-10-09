@@ -19,7 +19,7 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
-from cashflow_studio.app import create_app
+from cashcow_studio.app import create_app
 from conftest import AppEnv, channel_payload
 
 SLUG = "kind-ledger"
@@ -34,7 +34,7 @@ STAGE_ORDER = ("research", "title", "script", "storyboard", "voice", "images", "
 @pytest.fixture
 def api(app_env: AppEnv, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
     for name in ("LLM", "RESEARCH", "IMAGE", "VOICE"):
-        monkeypatch.setenv(f"CFS_{name}_PROVIDER", "mock")
+        monkeypatch.setenv(f"CCS_{name}_PROVIDER", "mock")
     with TestClient(create_app()) as client:
         stages = {stage.value for stage in client.app.state.engine.stages}
         assert {"research", "title", "script", "storyboard"} <= stages, stages

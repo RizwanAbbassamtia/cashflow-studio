@@ -86,7 +86,7 @@ export function VoiceTab({ form }: { form: UseFormReturn<ChannelFormValues> }) {
             <Input id="voice.style" placeholder="calm, warm, slow at emotional moments" {...register("voice.style")} />
           </Field>
           <Field label="Voice sample file" htmlFor="voice.sample_path" hint="A short recording of the voice, for reference.">
-            <Input id="voice.sample_path" placeholder="D:\CashflowStudio\voices\daniel-sample.mp3" spellCheck={false} {...register("voice.sample_path")} />
+            <Input id="voice.sample_path" placeholder="D:\CashCowStudio\voices\daniel-sample.mp3" spellCheck={false} {...register("voice.sample_path")} />
           </Field>
           <Field label="Gives word timings?" htmlFor="voice.returns_word_timestamps" hint="If no, the app lines up the words with the audio itself.">
             <Controller

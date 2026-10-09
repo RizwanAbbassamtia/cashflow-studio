@@ -11,13 +11,13 @@ from typing import Any
 
 import pytest
 
-from cashflow_studio.config import Settings
-from cashflow_studio.llm import MockLLMClient
-from cashflow_studio.llm.config import transition_catalog
-from cashflow_studio.models.channel import Channel
-from cashflow_studio.models.project import Project, ProjectSource
-from cashflow_studio.models.script import ScriptDoc
-from cashflow_studio.models.storyboard import (
+from cashcow_studio.config import Settings
+from cashcow_studio.llm import MockLLMClient
+from cashcow_studio.llm.config import transition_catalog
+from cashcow_studio.models.channel import Channel
+from cashcow_studio.models.project import Project, ProjectSource
+from cashcow_studio.models.script import ScriptDoc
+from cashcow_studio.models.storyboard import (
     MOTION_PRESETS,
     Scene,
     SceneLocks,
@@ -26,9 +26,9 @@ from cashflow_studio.models.storyboard import (
     SceneTransition,
     StoryboardDoc,
 )
-from cashflow_studio.pipeline.stages.base import StageContext, StageError
-from cashflow_studio.pipeline.stages.script import make_paragraph
-from cashflow_studio.pipeline.stages.storyboard import (
+from cashcow_studio.pipeline.stages.base import StageContext, StageError
+from cashcow_studio.pipeline.stages.script import make_paragraph
+from cashcow_studio.pipeline.stages.storyboard import (
     DEFAULT_NEGATIVE,
     Rules,
     SentenceInfo,

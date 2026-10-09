@@ -14,15 +14,15 @@ from typing import Any
 
 import pytest
 
-from cashflow_studio.models.research import TranscriptDoc, TranscriptSegment
-from cashflow_studio.research.config import ResearchConfig
-from cashflow_studio.research.errors import (
+from cashcow_studio.models.research import TranscriptDoc, TranscriptSegment
+from cashcow_studio.research.config import ResearchConfig
+from cashcow_studio.research.errors import (
     ResearchBlocked,
     ResearchError,
     TranscriptUnavailable,
     VideoNotFound,
 )
-from cashflow_studio.research.ytdlp_client import (
+from cashcow_studio.research.ytdlp_client import (
     YtDlpClient,
     choose_caption_track,
     looks_blocked,

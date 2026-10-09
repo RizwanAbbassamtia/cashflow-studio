@@ -10,10 +10,10 @@ from pathlib import Path
 
 import pytest
 
-from cashflow_studio.config import Settings
-from cashflow_studio.models.project import Project, ProjectSource, StageName
-from cashflow_studio.storage import db
-from cashflow_studio.storage.project_store import (
+from cashcow_studio.config import Settings
+from cashcow_studio.models.project import Project, ProjectSource, StageName
+from cashcow_studio.storage import db
+from cashcow_studio.storage.project_store import (
     STAGE_DIRS,
     ProjectNotFound,
     ProjectStore,

@@ -1,4 +1,4 @@
-# Cashflow Studio - Plan v0.2 (2026-10-09)
+# CashCow Studio - Plan v0.2 (2026-10-09)
 
 Status: approved direction, development starting at milestone M0. Supersedes v0.1.
 Sources for every technical decision are in [research/2026-10-09-research-dump.md](research/2026-10-09-research-dump.md).
@@ -186,7 +186,7 @@ One pull request per milestone.
 6. For Tier B languages: native scripts per language, or English master plus auto-dub?
 7. Arabic: Modern Standard Arabic or a dialect?
 
-Answered: repository is `RizwanAbbassamtia/cashflow-studio` (created 2026-10-09); team laptops have no GPUs.
+Answered: repository is `RizwanAbbassamtia/cashcow-studio` (created 2026-10-09); team laptops have no GPUs.
 
 ## 10. Fact-check corrections folded in (2026-10-09, second pass)
 

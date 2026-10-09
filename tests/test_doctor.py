@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from cashflow_studio import doctor
-from cashflow_studio.config import load_settings
+from cashcow_studio import doctor
+from cashcow_studio.config import load_settings
 from conftest import AppEnv
 
 EXPECTED_IDS = [
@@ -54,7 +54,7 @@ def test_every_check_returns_a_result_without_tools(no_tools: None) -> None:
     assert by_id["voice_key"].status == "warn"
     assert by_id["image_key"].status == "warn"
     assert by_id["python_version"].status == "ok"
-    assert by_id["shared_dir"].status == "ok"  # CFS_SHARED_DIR is set, so not the default
+    assert by_id["shared_dir"].status == "ok"  # CCS_SHARED_DIR is set, so not the default
     assert by_id["projects_dir"].status == "ok"
     assert by_id["exports_dir"].status == "ok"
     assert by_id["disk_space"].status in {"ok", "warn"}
@@ -69,7 +69,7 @@ def test_every_check_returns_a_result_without_tools(no_tools: None) -> None:
 def test_default_shared_dir_is_a_warning(
     app_env: AppEnv, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.delenv("CFS_SHARED_DIR")
+    monkeypatch.delenv("CCS_SHARED_DIR")
     report = doctor.run_all(load_settings())
     shared = next(check for check in report.checks if check.id == "shared_dir")
     assert shared.status == "warn"
@@ -149,7 +149,7 @@ def test_system_info_shape(client: TestClient, app_env: AppEnv) -> None:
 
 
 def test_doctor_cli_table_lists_every_check(app_env: AppEnv) -> None:
-    from cashflow_studio.cli import format_report
+    from cashcow_studio.cli import format_report
 
     report = doctor.run_all(load_settings())
     text = format_report(report)

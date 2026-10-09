@@ -1,11 +1,11 @@
-# Cashflow Studio front end
+# CashCow Studio front end
 
 The desktop UI: Vite 6 + React 19 + TypeScript, Tailwind CSS v4, react-router 7 (library mode),
 TanStack Query 5, react-hook-form + zod, lucide-react icons. It is built into `frontend/dist`,
 which the Python backend serves at `http://127.0.0.1:8765/`.
 
 The API shapes it uses are defined in `docs/M0-CONTRACT.md`; `src/types/channel.ts` mirrors
-`backend/cashflow_studio/models/channel.py` field for field.
+`backend/cashcow_studio/models/channel.py` field for field.
 
 ## Commands
 
@@ -20,7 +20,7 @@ npm run build        # tsc -b && vite build  ->  frontend/dist
 npm run preview      # serve the production build locally
 ```
 
-For `npm run dev` the backend must be running: `.venv/Scripts/python.exe -m cashflow_studio.cli serve`.
+For `npm run dev` the backend must be running: `.venv/Scripts/python.exe -m cashcow_studio.cli serve`.
 
 ## Layout
 

@@ -227,7 +227,7 @@ def test_framework_path_outside_the_shared_folder_is_refused(client: TestClient)
     """A framework file is read and sent to the writing model: it must stay in the shared folder."""
     body = channel_payload("Kind Ledger")
     body["frameworks"] = [
-        {"type": "title", "name": "Sneaky", "path": "C:/Users/me/AppData/Local/CashflowStudio/.env"}
+        {"type": "title", "name": "Sneaky", "path": "C:/Users/me/AppData/Local/CashCowStudio/.env"}
     ]
     response = client.post("/api/channels", json=body)
     assert response.status_code == 422

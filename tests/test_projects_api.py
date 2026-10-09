@@ -12,11 +12,11 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
-from cashflow_studio.api import projects as projects_api
-from cashflow_studio.app import create_app
-from cashflow_studio.models.project import StageName
-from cashflow_studio.pipeline import jobs
-from cashflow_studio.pipeline.stages.base import StageContext, StageError, StageResult
+from cashcow_studio.api import projects as projects_api
+from cashcow_studio.app import create_app
+from cashcow_studio.models.project import StageName
+from cashcow_studio.pipeline import jobs
+from cashcow_studio.pipeline.stages.base import StageContext, StageError, StageResult
 from conftest import AppEnv, channel_payload
 
 
@@ -50,8 +50,8 @@ class FakeStage:
 @pytest.fixture
 def api(app_env: AppEnv, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
     for name in ("LLM", "RESEARCH", "IMAGE", "VOICE"):
-        monkeypatch.setenv(f"CFS_{name}_PROVIDER", "mock")
-    monkeypatch.setenv("CFS_MAX_PARALLEL_PROJECTS", "2")
+        monkeypatch.setenv(f"CCS_{name}_PROVIDER", "mock")
+    monkeypatch.setenv("CCS_MAX_PARALLEL_PROJECTS", "2")
     with TestClient(create_app()) as client:
         engine = client.app.state.engine
         engine.stages.clear()  # fakes instead of whatever real stages are installed

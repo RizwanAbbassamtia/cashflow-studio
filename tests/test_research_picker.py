@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from cashflow_studio.models.channel import Channel
-from cashflow_studio.models.research import Candidate
-from cashflow_studio.research.outliers import UsedHistory
-from cashflow_studio.research.picker import (
+from cashcow_studio.models.channel import Channel
+from cashcow_studio.models.research import Candidate
+from cashcow_studio.research.outliers import UsedHistory
+from cashcow_studio.research.picker import (
     competitor_language,
     eligible_candidates,
     explain_pick,
@@ -138,11 +138,11 @@ def test_rerank_failures_and_unknown_ids_fall_back_to_the_score_order(channel: C
 def test_rerank_is_off_unless_the_environment_switch_is_set(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.delenv("CFS_RESEARCH_LLM_RERANK", raising=False)
+    monkeypatch.delenv("CCS_RESEARCH_LLM_RERANK", raising=False)
     assert rerank_enabled() is False
-    monkeypatch.setenv("CFS_RESEARCH_LLM_RERANK", "0")
+    monkeypatch.setenv("CCS_RESEARCH_LLM_RERANK", "0")
     assert rerank_enabled() is False
-    monkeypatch.setenv("CFS_RESEARCH_LLM_RERANK", "1")
+    monkeypatch.setenv("CCS_RESEARCH_LLM_RERANK", "1")
     assert rerank_enabled() is True
 
 

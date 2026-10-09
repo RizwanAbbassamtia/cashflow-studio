@@ -43,7 +43,7 @@ export function Sidebar() {
           <Clapperboard className="size-4 text-accent" aria-hidden />
         </div>
         <div className="leading-tight">
-          <div className="text-sm font-semibold text-ink">Cashflow Studio</div>
+          <div className="text-sm font-semibold text-ink">CashCow Studio</div>
           <div className="text-[11px] text-ink-faint">Faceless video pipeline</div>
         </div>
       </div>

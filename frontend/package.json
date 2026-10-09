@@ -1,9 +1,9 @@
 {
-  "name": "cashflow-studio-frontend",
+  "name": "cashcow-studio-frontend",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Cashflow Studio desktop UI (Vite + React + TypeScript), served by the Python backend from frontend/dist.",
+  "description": "CashCow Studio desktop UI (Vite + React + TypeScript), served by the Python backend from frontend/dist.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

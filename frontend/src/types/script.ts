@@ -1,5 +1,5 @@
 /**
- * Script stage shapes. Mirrors backend/cashflow_studio/models/script.py (Pydantic v2, the
+ * Script stage shapes. Mirrors backend/cashcow_studio/models/script.py (Pydantic v2, the
  * source of truth); see docs/M1-M2-CONTRACT.md section 5.
  *
  * `script.json`, `speech.json` and `originality.json` live in `03_script/`; the review payload

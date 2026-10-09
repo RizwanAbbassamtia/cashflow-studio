@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 
 from conftest import AppEnv
 
-TEST_KEY = "CFS_TEST_ANTHROPIC_KEY_FOR_PYTEST"
+TEST_KEY = "CCS_TEST_ANTHROPIC_KEY_FOR_PYTEST"
 
 
 def test_get_lists_known_keys_unset(client: TestClient, app_env: AppEnv) -> None:
@@ -85,7 +85,7 @@ def test_invalid_key_names_are_rejected(client: TestClient, app_env: AppEnv) -> 
 def test_paths_are_saved_and_can_go_back_to_default(
     client: TestClient, app_env: AppEnv, tmp_path
 ) -> None:
-    new_shared = tmp_path / "drive" / "CashflowStudio"
+    new_shared = tmp_path / "drive" / "CashCowStudio"
     response = client.put("/api/settings", json={"shared_dir": str(new_shared)})
     assert response.status_code == 200, response.text
     body = response.json()

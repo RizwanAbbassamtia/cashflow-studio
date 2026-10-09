@@ -1,4 +1,4 @@
-# Provider catalogue for Cashflow Studio: the voice and image tools the app knows about.
+# Provider catalogue for CashCow Studio: the voice and image tools the app knows about.
 #
 # No secrets live here. `key_env` is only the NAME of the environment variable that holds the
 # key; the value itself is saved per user in Settings > API keys (<app_data_dir>/.env).
@@ -7,7 +7,7 @@
 #            stub    = listed, waiting for API details (every call reports that)
 #            planned = arrives in a later version (shown in Settings, not selectable yet)
 # Prices are in US dollars per billing unit; `verified_on` is the day they were last checked.
-# Loaded by backend/cashflow_studio/providers/catalog.py; a broken entry is skipped with a
+# Loaded by backend/cashcow_studio/providers/catalog.py; a broken entry is skipped with a
 # log line, and the built-in defaults cover anything missing.
 
 schema_version: 1
@@ -111,7 +111,7 @@ image:
     name: "Google Gemini images (Nano Banana)"
     adapter: ready
     # Verify the ids against https://ai.google.dev/gemini-api/docs/models before shipping;
-    # the steps are in backend/cashflow_studio/providers/image/gemini.py.
+    # the steps are in backend/cashcow_studio/providers/image/gemini.py.
     models: [gemini-nano-banana-2.1, gemini-3-pro-image, gemini-3.1-flash-lite-image]
     default_model: gemini-nano-banana-2.1
     aspects: ["1:1", "3:2", "2:3", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"]

@@ -1,7 +1,7 @@
 # Claude API notes for this codebase (read before writing any LLM code)
 
 Source: Anthropic's current SDK reference as of 2026-10 (the `claude-api` skill). These rules are
-binding for `backend/cashflow_studio/llm/`.
+binding for `backend/cashcow_studio/llm/`.
 
 ## Models and prices (first-party API, per million tokens in / out)
 
@@ -106,6 +106,6 @@ Use Sonnet 5.5 for QA at effort `low`/`medium`.
 
 ## Mock provider
 
-`CFS_LLM_PROVIDER=mock` must produce schema-valid outputs without network access. Every stage
+`CCS_LLM_PROVIDER=mock` must produce schema-valid outputs without network access. Every stage
 test runs with the mock. A live smoke test (marked `@pytest.mark.live`, skipped by default) may
 call the real API when `ANTHROPIC_API_KEY` is set.

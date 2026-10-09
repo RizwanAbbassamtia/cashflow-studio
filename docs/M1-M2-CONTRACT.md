@@ -15,11 +15,11 @@ front end are built against this file. Change it first, code second.
 3. **Files are the truth.** Every stage writes its outputs into the project folder before it is
    marked done. The database is an index, never the only copy.
 4. **No key ever leaves the laptop.** LLM and provider calls use keys from `<app_data_dir>/.env`.
-5. **Mock everything for tests.** `CFS_LLM_PROVIDER=mock`, `CFS_RESEARCH_PROVIDER=mock`,
-   `CFS_IMAGE_PROVIDER=mock`, `CFS_VOICE_PROVIDER=mock` make every stage run offline and
+5. **Mock everything for tests.** `CCS_LLM_PROVIDER=mock`, `CCS_RESEARCH_PROVIDER=mock`,
+   `CCS_IMAGE_PROVIDER=mock`, `CCS_VOICE_PROVIDER=mock` make every stage run offline and
    deterministically. Tests never hit the network or spend money.
 
-## 1. Project and pipeline engine (`backend/cashflow_studio/pipeline/`)
+## 1. Project and pipeline engine (`backend/cashcow_studio/pipeline/`)
 
 ### Project folder
 
@@ -62,7 +62,7 @@ state machine now but their runners raise `NotImplementedStage` until M3/M4; the
 - `pipeline/engine.py`: `PipelineEngine` with `create_project(...)`, `run(project_id)` (advances
   until a gate or the end), `approve(project_id, stage, by, notes)`, `redo(project_id, stage, notes)`,
   `skip(project_id, stage)`, `set_mode(project_id, stage, mode)`. Runs stages in a background
-  asyncio task per project; at most `CFS_MAX_PARALLEL_PROJECTS` (default 2) at a time.
+  asyncio task per project; at most `CCS_MAX_PARALLEL_PROJECTS` (default 2) at a time.
 - `pipeline/stages/base.py`: `class Stage(Protocol): name; async def run(ctx: StageContext) -> StageResult`.
   `StageContext` carries the project, the channel, settings, the LLM client, providers, and a
   `progress(msg, pct)` callback. `StageResult` carries `outputs: list[Path]`, `summary: str`,
@@ -98,7 +98,7 @@ Stage-specific `edits` on approve: title `{chosen_index?: int, title_text?: str}
 `{script_md?: str, locked_paragraph_ids?: [str]}`; storyboard `{storyboard: StoryboardDoc}`;
 research `{video_id}` (changes the pick before title runs).
 
-## 2. Research stage (`backend/cashflow_studio/research/`)
+## 2. Research stage (`backend/cashcow_studio/research/`)
 
 ### Engine
 
@@ -131,12 +131,12 @@ research `{video_id}` (changes the pick before title runs).
 - `picker.py`: `pick_one(candidates, channel, history) -> Candidate`: the AI pick. Default
   strategy `top_outlier_fresh`: highest score among candidates not used before, preferring the
   last 90 days, language matching the channel. Optional LLM rerank (Sonnet 5.5) of the top 10 by
-  fit to the channel niche when `CFS_RESEARCH_LLM_RERANK=1`; off by default.
+  fit to the channel niche when `CCS_RESEARCH_LLM_RERANK=1`; off by default.
 - `research_stage.py`: scans (or reuses a fresh scan), computes candidates, picks one (or uses the
   manual pick), fetches exact details, transcript and thumbnail for the picked video, writes
   `candidates.json`, `pick.json`, `video.json`, `transcript.json`, `competitor_thumbnail.jpg`.
   Review payload: top 50 candidates with the pick highlighted.
-- Mock provider (`CFS_RESEARCH_PROVIDER=mock`): deterministic fixtures in
+- Mock provider (`CCS_RESEARCH_PROVIDER=mock`): deterministic fixtures in
   `tests/fixtures/research/` (3 channels, 30 videos each, one obvious outlier each).
 
 ### `Candidate` (models/research.py)
@@ -148,7 +148,7 @@ baseline_views, outlier_score, vpd, vpd_ratio, sub_ratio, label, thumbnail_url,
 used_before: bool, excluded_reason?: str, rank
 ```
 
-## 3. LLM layer (`backend/cashflow_studio/llm/`)
+## 3. LLM layer (`backend/cashcow_studio/llm/`)
 
 - Official `anthropic` Python SDK only. Default model `claude-opus-5-5` for title and script,
   `claude-sonnet-5-5` for storyboard, summaries, classification; both configurable in
@@ -166,7 +166,7 @@ used_before: bool, excluded_reason?: str, rank
 - `llm/prompts/*.md`: one file per task (`title.md`, `script.md`, `speech_normalize.md`,
   `storyboard.md`, `transcript_summary.md`, `policy_check.md`). Prompts are plain Markdown with
   `{{placeholders}}`; no prompt text inside Python strings.
-- `llm/mock.py`: `CFS_LLM_PROVIDER=mock` returns deterministic, schema-valid outputs derived from
+- `llm/mock.py`: `CCS_LLM_PROVIDER=mock` returns deterministic, schema-valid outputs derived from
   the inputs (for example the title variants embed the keywords; the script repeats the title in
   the hook) so tests and demos work offline.
 
@@ -248,7 +248,7 @@ Shorts variant: when the channel format is `both`, the storyboard stage produces
 `storyboard.json` for the primary format and `storyboard.shorts.json` with 9:16 rects and faster
 transitions is produced in M4 from the same scenes (not now).
 
-## 7. Provider interfaces (`backend/cashflow_studio/providers/`) - interfaces now, adapters in M3
+## 7. Provider interfaces (`backend/cashcow_studio/providers/`) - interfaces now, adapters in M3
 
 - `providers/voice/base.py`: `ProviderCapabilities`, `VoiceProvider` protocol
   (`list_voices`, `create_clone`, `synthesize(SynthRequest) -> SynthResult`, `estimate_cost`,
@@ -266,7 +266,7 @@ transitions is produced in M4 from the same scenes (not now).
   model list before shipping); not exercised in tests.
 - `providers/registry.py`: builds providers from env/config; `mock` everywhere by default in tests.
 
-## 8. Policy rules (`backend/cashflow_studio/policy/`)
+## 8. Policy rules (`backend/cashcow_studio/policy/`)
 
 `rules.yaml` with id, title, stage, severity (`block`|`warn`), source URL, last_verified date,
 parameters (thresholds above). `gates.py` exposes `evaluate(stage, context) -> [GateResult]`

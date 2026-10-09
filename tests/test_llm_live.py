@@ -13,20 +13,20 @@ from pathlib import Path
 
 import pytest
 
-from cashflow_studio.config import Settings
-from cashflow_studio.llm import build_llm_client
-from cashflow_studio.llm.log import list_llm_calls
-from cashflow_studio.models.channel import Channel
-from cashflow_studio.models.project import Project, ProjectSource
-from cashflow_studio.pipeline.stages.base import StageContext
-from cashflow_studio.pipeline.stages.title import TitleStage
+from cashcow_studio.config import Settings
+from cashcow_studio.llm import build_llm_client
+from cashcow_studio.llm.log import list_llm_calls
+from cashcow_studio.models.channel import Channel
+from cashcow_studio.models.project import Project, ProjectSource
+from cashcow_studio.pipeline.stages.base import StageContext
+from cashcow_studio.pipeline.stages.title import TitleStage
 
 pytestmark = pytest.mark.live
 
 
 @pytest.mark.skipif(not os.environ.get("ANTHROPIC_API_KEY"), reason="ANTHROPIC_API_KEY not set")
 def test_title_stage_live(app_env, monkeypatch) -> None:
-    monkeypatch.setenv("CFS_LLM_PROVIDER", "anthropic")
+    monkeypatch.setenv("CCS_LLM_PROVIDER", "anthropic")
     settings = Settings()
     folder = app_env.projects_dir / "live-title"
     (folder / "01_research").mkdir(parents=True)

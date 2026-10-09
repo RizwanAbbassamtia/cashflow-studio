@@ -5,9 +5,9 @@ from __future__ import annotations
 import asyncio
 import threading
 
-from cashflow_studio.pipeline import jobs
-from cashflow_studio.pipeline.events import EventBus
-from cashflow_studio.pipeline.jobs import JobRegistry
+from cashcow_studio.pipeline import jobs
+from cashcow_studio.pipeline.events import EventBus
+from cashcow_studio.pipeline.jobs import JobRegistry
 
 
 def test_job_lifecycle_through_the_module_shortcuts() -> None:

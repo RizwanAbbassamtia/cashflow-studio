@@ -1,5 +1,5 @@
 /**
- * Mirror of backend/cashflow_studio/models/title.py (docs/M1-M2-CONTRACT.md section 4):
+ * Mirror of backend/cashcow_studio/models/title.py (docs/M1-M2-CONTRACT.md section 4):
  * the title stage writes 02_title/title.json with seven variants and a recommendation.
  */
 import type { GateResult, SourceKind } from "./project";

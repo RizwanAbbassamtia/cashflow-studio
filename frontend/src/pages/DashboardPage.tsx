@@ -98,7 +98,7 @@ export function DashboardPage() {
     <div className="flex flex-col gap-6">
       {channels.isError ? (
         <Notice tone="fail" title="The server is not answering">
-          Start the backend (cfs serve) and reload. The pages keep working once it is up.
+          Start the backend (ccs serve) and reload. The pages keep working once it is up.
         </Notice>
       ) : null}
 

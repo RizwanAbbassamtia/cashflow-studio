@@ -1,5 +1,5 @@
 /**
- * Typed fetch wrapper for the Cashflow Studio backend (FastAPI, same origin, prefix /api).
+ * Typed fetch wrapper for the CashCow Studio backend (FastAPI, same origin, prefix /api).
  *
  * This is the only file that deals with untyped JSON: everything that leaves it is typed.
  * Errors are turned into ApiError with a plain-English message and, for 422 responses,
@@ -30,7 +30,7 @@ export class ApiError extends Error {
   }
 }
 
-const NETWORK_MESSAGE = "Cannot reach the Cashflow Studio server. Start it and try again.";
+const NETWORK_MESSAGE = "Cannot reach the CashCow Studio server. Start it and try again.";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);

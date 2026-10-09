@@ -6,8 +6,8 @@ from pathlib import Path
 
 import yaml
 
-from cashflow_studio.models.channel import Channel, ChannelSummary
-from cashflow_studio.storage.channel_store import make_slug, summary_of
+from cashcow_studio.models.channel import Channel, ChannelSummary
+from cashcow_studio.storage.channel_store import make_slug, summary_of
 
 EXAMPLE = Path(__file__).resolve().parents[1] / "channels" / "example-channel.yaml"
 

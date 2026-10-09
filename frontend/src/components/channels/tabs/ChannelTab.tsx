@@ -162,10 +162,10 @@ export function ChannelTab({ form, mode, onSlugEdited }: ChannelTabProps) {
       <FormSection title="Folders and look">
         <FieldGrid>
           <Field label="Export folder" htmlFor="channel.export_folder" hint="Where finished videos for this channel go. Leave empty to use the exports folder from Settings.">
-            <Input id="channel.export_folder" placeholder="D:\CashflowStudio\exports\kind-ledger" spellCheck={false} {...register("channel.export_folder")} />
+            <Input id="channel.export_folder" placeholder="D:\CashCowStudio\exports\kind-ledger" spellCheck={false} {...register("channel.export_folder")} />
           </Field>
           <Field label="Music folder" htmlFor="channel.music_folder" hint="Background music the editor can pick from.">
-            <Input id="channel.music_folder" placeholder="D:\CashflowStudio\music\calm" spellCheck={false} {...register("channel.music_folder")} />
+            <Input id="channel.music_folder" placeholder="D:\CashCowStudio\music\calm" spellCheck={false} {...register("channel.music_folder")} />
           </Field>
           <Field label="Caption style" htmlFor="channel.caption_style" className="md:col-span-2">
             <Input id="channel.caption_style" placeholder="Bold white, black outline, bottom centre, 2 lines max" {...register("channel.caption_style")} />

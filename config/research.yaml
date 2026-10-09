@@ -1,6 +1,6 @@
-# Research defaults for Cashflow Studio. Values here apply to every channel; edit and
+# Research defaults for CashCow Studio. Values here apply to every channel; edit and
 # restart the app. Anything missing falls back to the same defaults built into the code
-# (backend/cashflow_studio/research/config.py).
+# (backend/cashcow_studio/research/config.py).
 
 tabs: [videos, shorts]          # channel tabs to list on "Scan now"
 max_videos_per_channel: 200     # newest videos read per tab

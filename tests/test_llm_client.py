@@ -11,21 +11,21 @@ from typing import Any
 import pytest
 from pydantic import BaseModel
 
-from cashflow_studio.llm import LLMError, MockLLMClient, build_llm_client
-from cashflow_studio.llm.client import (
+from cashcow_studio.llm import LLMError, MockLLMClient, build_llm_client
+from cashcow_studio.llm.client import (
     AnthropicLLMClient,
     LLMRefused,
     provider_name,
     system_blocks,
 )
-from cashflow_studio.llm.config import (
+from cashcow_studio.llm.config import (
     LLMConfig,
     ModelPrice,
     compute_cost,
     speaking_rate_wpm,
     transition_catalog,
 )
-from cashflow_studio.llm.frameworks import (
+from cashcow_studio.llm.frameworks import (
     FrameworkError,
     cache_path,
     check_framework_path,
@@ -34,18 +34,18 @@ from cashflow_studio.llm.frameworks import (
     resolve_path,
     select_framework,
 )
-from cashflow_studio.llm.log import list_llm_calls, project_llm_cost
-from cashflow_studio.llm.prompts import PromptError, available_prompts, load_prompt, render_text
-from cashflow_studio.llm.text import (
+from cashcow_studio.llm.log import list_llm_calls, project_llm_cost
+from cashcow_studio.llm.prompts import PromptError, available_prompts, load_prompt, render_text
+from cashcow_studio.llm.text import (
     contains_keyword,
     keywords_of,
     ngram_overlap,
     similarity,
     split_sentences,
 )
-from cashflow_studio.models.channel import Channel
-from cashflow_studio.models.script import ScriptDraft, SpeechNormalizeOutput
-from cashflow_studio.models.title import TitleLLMOutput
+from cashcow_studio.models.channel import Channel
+from cashcow_studio.models.script import ScriptDraft, SpeechNormalizeOutput
+from cashcow_studio.models.title import TitleLLMOutput
 
 TEST_KEY = "sk-test-not-real-0000"
 
@@ -267,7 +267,7 @@ def test_text_helpers() -> None:
 
 
 def test_mock_is_selected_by_env_and_answers_every_task(app_env, monkeypatch) -> None:
-    monkeypatch.setenv("CFS_LLM_PROVIDER", "mock")
+    monkeypatch.setenv("CCS_LLM_PROVIDER", "mock")
     client = build_llm_client(app_data_dir=app_env.app_data_dir)
     assert isinstance(client, MockLLMClient) and client.provider == "mock"
     assert provider_name(None, LLMConfig.load()) == "mock"
@@ -470,7 +470,7 @@ def test_system_blocks_put_cache_mark_on_the_first_block() -> None:
 
 
 def test_llm_calls_never_store_prompts(app_env, monkeypatch) -> None:
-    monkeypatch.setenv("CFS_LLM_PROVIDER", "mock")
+    monkeypatch.setenv("CCS_LLM_PROVIDER", "mock")
     client = build_llm_client(app_data_dir=app_env.app_data_dir)
     run(client.complete("title", "SECRET-SYSTEM", "SECRET-USER", TitleLLMOutput,
                         variables={"source_title": "A title"}, project_id="p3"))

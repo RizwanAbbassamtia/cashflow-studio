@@ -14,8 +14,8 @@ channel:
   long_form_minutes: 10
   shorts_seconds: 45
   videos_per_week: 5
-  export_folder: D:\CashflowStudio\exports\kind-ledger
-  music_folder: D:\CashflowStudio\music\calm
+  export_folder: D:\CashCowStudio\exports\kind-ledger
+  music_folder: D:\CashCowStudio\music\calm
   brand_colors: ["#1F3864", "#FFC000", "#FFFFFF"]
   caption_style: Bold white, black outline, bottom centre, 2 lines max
   owner: Imran
@@ -56,7 +56,7 @@ voice:
   model: s1
   speed: 1.0
   style: calm, warm, slow at emotional moments
-  sample_path: D:\CashflowStudio\voices\daniel-sample.mp3
+  sample_path: D:\CashCowStudio\voices\daniel-sample.mp3
   returns_word_timestamps: false # if false the app aligns the audio with Whisper
   api_key_env: FISH_AUDIO_API_KEY
   monthly_budget_characters: 1000000
@@ -71,7 +71,7 @@ images:
   aspect_long: "16:9"
   aspect_shorts: "9:16"
   resolution: 1920x1080
-  reference_folder: D:\CashflowStudio\refs\kind-ledger
+  reference_folder: D:\CashCowStudio\refs\kind-ledger
   on_image_text: app_popups      # app_popups = text drawn by the app, never by the image model
   popup_style: Rounded box, brand yellow, bold Arial 64px, slide-in from left
   api_key_env: GEMINI_API_KEY

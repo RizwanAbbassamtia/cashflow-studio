@@ -11,13 +11,13 @@ from typing import Any
 import pytest
 from pydantic import BaseModel
 
-from cashflow_studio.config import Settings
-from cashflow_studio.llm import LLMUsage, MockLLMClient
-from cashflow_studio.models.channel import Channel
-from cashflow_studio.models.project import Project, ProjectSource
-from cashflow_studio.models.title import TitleLLMOutput, TitleSource, TitleVariantLLM
-from cashflow_studio.pipeline.stages.base import GateBlocked, StageContext, StageError
-from cashflow_studio.pipeline.stages.title import (
+from cashcow_studio.config import Settings
+from cashcow_studio.llm import LLMUsage, MockLLMClient
+from cashcow_studio.models.channel import Channel
+from cashcow_studio.models.project import Project, ProjectSource
+from cashcow_studio.models.title import TitleLLMOutput, TitleSource, TitleVariantLLM
+from cashcow_studio.pipeline.stages.base import GateBlocked, StageContext, StageError
+from cashcow_studio.pipeline.stages.title import (
     TitleStage,
     choose_recommended,
     load_review_payload,

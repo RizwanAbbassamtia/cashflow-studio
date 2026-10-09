@@ -3,7 +3,7 @@ requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "cashflow-studio"
+name = "cashcow-studio"
 version = "0.1.0"
 description = "Turns competitor YouTube channels into finished faceless videos with a human in the loop at every stage."
 readme = "README.md"
@@ -33,13 +33,13 @@ dev = [
 ]
 
 [project.scripts]
-cfs = "cashflow_studio.cli:app"
+ccs = "cashcow_studio.cli:app"
 
 [tool.setuptools.packages.find]
 where = ["backend"]
 
 [tool.setuptools.package-data]
-cashflow_studio = ["py.typed", "llm/prompts/*.md", "policy/*.yaml"]
+cashcow_studio = ["py.typed", "llm/prompts/*.md", "policy/*.yaml"]
 
 [tool.ruff]
 line-length = 100

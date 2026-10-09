@@ -11,32 +11,32 @@ from pathlib import Path
 from types import SimpleNamespace as NS
 
 import pytest
-from cashflow_studio.providers.voice.ai33 import AI33_PENDING, Ai33VoiceProvider
-from cashflow_studio.providers.voice.mock import MockVoiceProvider
 from PIL import Image
 from pydantic import ValidationError
 
-from cashflow_studio.providers import ProviderError, ProviderNotConfigured, registry
-from cashflow_studio.providers.catalog import config_file, load_catalog
-from cashflow_studio.providers.image.base import (
+from cashcow_studio.providers import ProviderError, ProviderNotConfigured, registry
+from cashcow_studio.providers.catalog import config_file, load_catalog
+from cashcow_studio.providers.image.base import (
     ImageProvider,
     ImageRequest,
     pixel_size,
     size_label,
 )
-from cashflow_studio.providers.image.gemini import (
+from cashcow_studio.providers.image.gemini import (
     GeminiImageProvider,
     compose_prompt,
     explain_api_error,
     first_image_part,
 )
-from cashflow_studio.providers.image.mock import MockImageProvider
-from cashflow_studio.providers.voice.base import (
+from cashcow_studio.providers.image.mock import MockImageProvider
+from cashcow_studio.providers.voice.ai33 import AI33_PENDING, Ai33VoiceProvider
+from cashcow_studio.providers.voice.base import (
     CloneConsent,
     SynthRequest,
     VoiceProvider,
     estimate_speech_seconds,
 )
+from cashcow_studio.providers.voice.mock import MockVoiceProvider
 
 PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
 TEN_WORDS = "one two three four five six seven eight nine ten"
@@ -45,7 +45,7 @@ FAKE_SECRET = "fake-gemini-key-0123456789ABCDEF"
 
 @pytest.fixture
 def no_provider_env(monkeypatch: pytest.MonkeyPatch) -> None:
-    for name in ("CFS_VOICE_PROVIDER", "CFS_IMAGE_PROVIDER", "GEMINI_API_KEY", "AI33_API_KEY"):
+    for name in ("CCS_VOICE_PROVIDER", "CCS_IMAGE_PROVIDER", "GEMINI_API_KEY", "AI33_API_KEY"):
         monkeypatch.delenv(name, raising=False)
 
 
@@ -220,8 +220,8 @@ def test_registry_defaults_to_mock(no_provider_env: None) -> None:
 
 
 def test_registry_reads_env(no_provider_env: None, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("CFS_IMAGE_PROVIDER", "gemini")
-    monkeypatch.setenv("CFS_VOICE_PROVIDER", "AI33")
+    monkeypatch.setenv("CCS_IMAGE_PROVIDER", "gemini")
+    monkeypatch.setenv("CCS_VOICE_PROVIDER", "AI33")
     providers = registry.build_providers()
     assert isinstance(providers["image"], GeminiImageProvider)
     assert isinstance(providers["voice"], Ai33VoiceProvider)
@@ -239,8 +239,8 @@ def test_registry_uses_settings_attribute(no_provider_env: None) -> None:
 def test_registry_unknown_provider_does_not_raise(
     no_provider_env: None, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    monkeypatch.setenv("CFS_IMAGE_PROVIDER", "nope")
-    monkeypatch.setenv("CFS_VOICE_PROVIDER", "minimax")  # listed, adapter not built yet
+    monkeypatch.setenv("CCS_IMAGE_PROVIDER", "nope")
+    monkeypatch.setenv("CCS_VOICE_PROVIDER", "minimax")  # listed, adapter not built yet
     providers = registry.build_providers()
     image, voice = providers["image"], providers["voice"]
     assert isinstance(image, ImageProvider) and isinstance(voice, VoiceProvider)
@@ -289,7 +289,7 @@ def test_ai33_stub_message(no_provider_env: None, tmp_path: Path) -> None:
 
 
 def test_gemini_imports_without_credentials(no_provider_env: None, tmp_path: Path) -> None:
-    module = importlib.import_module("cashflow_studio.providers.image.gemini")
+    module = importlib.import_module("cashcow_studio.providers.image.gemini")
     provider = module.GeminiImageProvider()
     assert provider.model == "gemini-nano-banana-2.1"
     assert isinstance(provider, ImageProvider)
@@ -420,7 +420,7 @@ def test_catalog_skips_broken_entries_and_overrides_good_ones(tmp_path: Path) ->
 
 
 def test_catalog_config_dir_override(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    monkeypatch.setenv("CFS_CONFIG_DIR", str(tmp_path))
+    monkeypatch.setenv("CCS_CONFIG_DIR", str(tmp_path))
     assert config_file() == tmp_path / "providers.yaml"
     assert load_catalog().source == "built-in"  # no file there yet
 
@@ -450,7 +450,7 @@ def test_list_provider_status_never_leaks_keys(
 def test_list_provider_status_flags_unknown_selection(
     no_provider_env: None, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("CFS_VOICE_PROVIDER", "nope")
+    monkeypatch.setenv("CCS_VOICE_PROVIDER", "nope")
     rows = registry.list_provider_status()
     row = next(row for row in rows if row.kind == "voice" and row.selected)
     assert row.id == "nope" and row.status == "fail"

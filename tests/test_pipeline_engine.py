@@ -12,24 +12,24 @@ from typing import Any
 
 import pytest
 
-from cashflow_studio.config import Settings
-from cashflow_studio.models.channel import Channel
-from cashflow_studio.models.project import Project, ProjectCreate, ProjectSource, StageName
-from cashflow_studio.pipeline import engine as engine_module
-from cashflow_studio.pipeline.engine import (
+from cashcow_studio.config import Settings
+from cashcow_studio.models.channel import Channel
+from cashcow_studio.models.project import Project, ProjectCreate, ProjectSource, StageName
+from cashcow_studio.pipeline import engine as engine_module
+from cashcow_studio.pipeline.engine import (
     InvalidProjectRequest,
     InvalidTransition,
     PipelineEngine,
     ProjectBusy,
 )
-from cashflow_studio.pipeline.stages.base import (
+from cashcow_studio.pipeline.stages.base import (
     GateBlocked,
     NotImplementedStage,
     StageContext,
     StageError,
     StageResult,
 )
-from cashflow_studio.storage.channel_store import ChannelStore
+from cashcow_studio.storage.channel_store import ChannelStore
 from conftest import AppEnv, channel_payload
 
 SLUG = "kind-ledger"
@@ -775,8 +775,8 @@ def test_redo_with_locked_paragraph_ids_keeps_them_verbatim(
     settings: Settings, channel: Channel
 ) -> None:
     """The real script stage through the engine: locks sent with the redo survive it."""
-    from cashflow_studio.llm import MockLLMClient
-    from cashflow_studio.pipeline.stages.script import ScriptStage
+    from cashcow_studio.llm import MockLLMClient
+    from cashcow_studio.pipeline.stages.script import ScriptStage
 
     research, title = FakeStage("research"), FakeStage("title")
 

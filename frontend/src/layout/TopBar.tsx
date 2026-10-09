@@ -18,7 +18,7 @@ export function usePageTitle(): string {
     const handle = matches[i]?.handle;
     if (hasTitle(handle)) return handle.title;
   }
-  return "Cashflow Studio";
+  return "CashCow Studio";
 }
 
 export function TopBar() {

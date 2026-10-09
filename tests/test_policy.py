@@ -5,8 +5,8 @@ from __future__ import annotations
 
 import re
 
-from cashflow_studio.policy import blocking_reasons, evaluate, load_rules, rule, rules_for
-from cashflow_studio.policy.gates import CHECKS, scene_band
+from cashcow_studio.policy import blocking_reasons, evaluate, load_rules, rule, rules_for
+from cashcow_studio.policy.gates import CHECKS, scene_band
 
 
 def by_id(results: list) -> dict[str, object]:

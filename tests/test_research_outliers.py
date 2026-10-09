@@ -6,9 +6,9 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from cashflow_studio.models.research import Candidate, FlatVideo, TabListing
-from cashflow_studio.research.config import ExclusionConfig, LabelThresholds, ResearchConfig
-from cashflow_studio.research.outliers import (
+from cashcow_studio.models.research import Candidate, FlatVideo, TabListing
+from cashcow_studio.research.config import ExclusionConfig, LabelThresholds, ResearchConfig
+from cashcow_studio.research.outliers import (
     UsedHistory,
     VideoInput,
     baseline_views,

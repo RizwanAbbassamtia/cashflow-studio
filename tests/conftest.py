@@ -1,6 +1,6 @@
 """Shared fixtures: every test gets a fresh app with its own temporary data folders.
 
-The ``CFS_*`` environment variables are set before ``create_app()`` runs, which is how the
+The ``CCS_*`` environment variables are set before ``create_app()`` runs, which is how the
 backend learns where to keep settings, keys and channels.
 """
 
@@ -15,7 +15,7 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
-from cashflow_studio.app import create_app
+from cashcow_studio.app import create_app
 
 # Short names keep the temp paths well under the Windows 260-character limit.
 pytest_plugins: list[str] = []
@@ -49,12 +49,12 @@ def app_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[AppEnv]
         projects_dir=tmp_path / "projects",
         exports_dir=tmp_path / "exports",
     )
-    monkeypatch.setenv("CFS_APP_DATA_DIR", str(env.app_data_dir))
-    monkeypatch.setenv("CFS_SHARED_DIR", str(env.shared_dir))
-    monkeypatch.setenv("CFS_PROJECTS_DIR", str(env.projects_dir))
-    monkeypatch.setenv("CFS_EXPORTS_DIR", str(env.exports_dir))
-    monkeypatch.delenv("CFS_PORT", raising=False)
-    monkeypatch.delenv("CFS_FRONTEND_DIST", raising=False)
+    monkeypatch.setenv("CCS_APP_DATA_DIR", str(env.app_data_dir))
+    monkeypatch.setenv("CCS_SHARED_DIR", str(env.shared_dir))
+    monkeypatch.setenv("CCS_PROJECTS_DIR", str(env.projects_dir))
+    monkeypatch.setenv("CCS_EXPORTS_DIR", str(env.exports_dir))
+    monkeypatch.delenv("CCS_PORT", raising=False)
+    monkeypatch.delenv("CCS_FRONTEND_DIST", raising=False)
     # Keys written to .env are loaded into os.environ by the app; restore it afterwards.
     snapshot = os.environ.copy()
     yield env

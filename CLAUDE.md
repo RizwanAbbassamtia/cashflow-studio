@@ -1,4 +1,4 @@
-# Cashflow Studio - working notes for Claude
+# CashCow Studio - working notes for Claude
 
 ## What this is
 Desktop app (Windows) that turns competitor YouTube channels into finished faceless videos with a
@@ -6,18 +6,18 @@ human in the loop at every stage. Plan: `docs/PLAN.md`. Current milestone contra
 Research behind the decisions: `docs/research/`.
 
 ## Layout
-- `backend/cashflow_studio/` Python 3.12 package (FastAPI API, pipeline, providers, CLI `cfs`).
+- `backend/cashcow_studio/` Python 3.12 package (FastAPI API, pipeline, providers, CLI `ccs`).
 - `frontend/` Vite + React + TypeScript + Tailwind v4 app, built into `frontend/dist`, served by the backend.
 - `tests/` pytest. `channels/example-channel.yaml` is the reference channel config.
-- Per-user data never lives in the repo: app data in `%LOCALAPPDATA%\CashflowStudio`, shared channel
+- Per-user data never lives in the repo: app data in `%LOCALAPPDATA%\CashCowStudio`, shared channel
   data in the synced Google Drive folder, media in `projects/` and `exports/` (git-ignored).
 
 ## Commands (Windows, Git Bash)
-- Python env: `F:/CashflowStudio/.venv/Scripts/python.exe` (create with `python -m venv .venv`; install with
+- Python env: `F:/CashCowStudio/.venv/Scripts/python.exe` (create with `python -m venv .venv`; install with
   `.venv/Scripts/python.exe -m pip install -e ".[dev]"`).
 - Tests: `.venv/Scripts/python.exe -m pytest -q`
 - Lint: `.venv/Scripts/python.exe -m ruff check backend tests`
-- API server: `.venv/Scripts/python.exe -m cashflow_studio.cli serve` (port 8765, 127.0.0.1 only)
+- API server: `.venv/Scripts/python.exe -m cashcow_studio.cli serve` (port 8765, 127.0.0.1 only)
 - Front end: `cd frontend && npm install && npm run build` (also `npm run dev`, `npm run typecheck`).
   Node is at `C:\Program Files\nodejs` if not on PATH.
 - FFmpeg 9 is installed on this machine and on PATH.

@@ -1,10 +1,10 @@
 # Which Claude model each task uses, how hard it thinks, and what a call costs.
 #
 # The Settings screen can override `models` and `effort` per task (settings.json, key "llm").
-# CFS_LLM_PROVIDER=mock replaces the real client with the offline mock for tests and demos.
+# CCS_LLM_PROVIDER=mock replaces the real client with the offline mock for tests and demos.
 # Model ids are used exactly as written here; never append dates.
 
-provider: anthropic            # anthropic | mock (the CFS_LLM_PROVIDER environment variable wins)
+provider: anthropic            # anthropic | mock (the CCS_LLM_PROVIDER environment variable wins)
 
 models:
   title: claude-opus-5-5

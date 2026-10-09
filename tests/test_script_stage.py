@@ -12,12 +12,12 @@ from typing import Any
 import pytest
 from pydantic import BaseModel
 
-from cashflow_studio.config import Settings
-from cashflow_studio.llm import LLMUsage, MockLLMClient
-from cashflow_studio.llm.client import LLMError
-from cashflow_studio.models.channel import Channel
-from cashflow_studio.models.project import Project, ProjectSource
-from cashflow_studio.models.script import (
+from cashcow_studio.config import Settings
+from cashcow_studio.llm import LLMUsage, MockLLMClient
+from cashcow_studio.llm.client import LLMError
+from cashcow_studio.models.channel import Channel
+from cashcow_studio.models.project import Project, ProjectSource
+from cashcow_studio.models.script import (
     PolicyCheckOutput,
     ScriptDoc,
     ScriptDraft,
@@ -26,8 +26,8 @@ from cashflow_studio.models.script import (
     SpeechNormalizeOutput,
     TranscriptSummary,
 )
-from cashflow_studio.pipeline.stages.base import GateBlocked, StageContext, StageError
-from cashflow_studio.pipeline.stages.script import (
+from cashcow_studio.pipeline.stages.base import GateBlocked, StageContext, StageError
+from cashcow_studio.pipeline.stages.script import (
     ScriptStage,
     fingerprint,
     load_review_payload,

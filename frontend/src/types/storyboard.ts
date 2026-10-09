@@ -1,5 +1,5 @@
 /**
- * Storyboard stage shapes. Mirrors backend/cashflow_studio/models/storyboard.py (Pydantic v2,
+ * Storyboard stage shapes. Mirrors backend/cashcow_studio/models/storyboard.py (Pydantic v2,
  * the source of truth); see docs/M1-M2-CONTRACT.md section 6.
  *
  * `04_storyboard/storyboard.json` is the file on disk; the review payload of

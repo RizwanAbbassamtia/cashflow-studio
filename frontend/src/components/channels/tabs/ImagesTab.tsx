@@ -71,7 +71,7 @@ export function ImagesTab({ form }: { form: UseFormReturn<ChannelFormValues> }) 
             <Input id="images.resolution" placeholder="1920x1080" spellCheck={false} {...register("images.resolution")} />
           </Field>
           <Field label="Reference images folder" htmlFor="images.reference_folder" className="md:col-span-3" hint="Example images the tool should match, when it supports references.">
-            <Input id="images.reference_folder" placeholder="D:\CashflowStudio\refs\kind-ledger" spellCheck={false} {...register("images.reference_folder")} />
+            <Input id="images.reference_folder" placeholder="D:\CashCowStudio\refs\kind-ledger" spellCheck={false} {...register("images.reference_folder")} />
           </Field>
         </FieldGrid>
       </FormSection>

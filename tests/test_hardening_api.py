@@ -12,11 +12,11 @@ import pytest
 from fastapi.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
 
-from cashflow_studio.app import create_app
-from cashflow_studio.models.channel import Channel
-from cashflow_studio.storage import channel_store
-from cashflow_studio.storage.channel_store import ChannelExists, ChannelStore, safe_filename
-from cashflow_studio.storage.settings_store import SettingsStore
+from cashcow_studio.app import create_app
+from cashcow_studio.models.channel import Channel
+from cashcow_studio.storage import channel_store
+from cashcow_studio.storage.channel_store import ChannelExists, ChannelStore, safe_filename
+from cashcow_studio.storage.settings_store import SettingsStore
 from conftest import AppEnv, channel_payload
 
 SECRET = "sk-ant-api03-REALSECRETVALUE-abcdefghijklmnop-WXYZ"
@@ -113,7 +113,7 @@ def test_app_and_system_settings_cannot_be_saved_as_keys(
     client: TestClient, app_env: AppEnv
 ) -> None:
     path_before = os.environ.get("PATH")
-    for name in ("CFS_SHARED_DIR", "CFS_PORT", "PATH", "PYTHONPATH", "USERPROFILE"):
+    for name in ("CCS_SHARED_DIR", "CCS_PORT", "PATH", "PYTHONPATH", "USERPROFILE"):
         response = client.put("/api/settings", json={"keys": {name: "abcdefghijkl"}})
         assert response.status_code == 422, name
         assert name in response.json()["detail"]
@@ -121,10 +121,10 @@ def test_app_and_system_settings_cannot_be_saved_as_keys(
     assert not app_env.env_file.exists()
     # Clearing such a line from a hand-edited .env still works and never unsets PATH itself.
     app_env.env_file.parent.mkdir(parents=True, exist_ok=True)
-    app_env.env_file.write_text("CFS_PORT=9999\n", encoding="utf-8")
-    cleared = client.put("/api/settings", json={"keys": {"CFS_PORT": None, "PATH": None}})
+    app_env.env_file.write_text("CCS_PORT=9999\n", encoding="utf-8")
+    cleared = client.put("/api/settings", json={"keys": {"CCS_PORT": None, "PATH": None}})
     assert cleared.status_code == 200
-    assert "CFS_PORT" not in app_env.env_file.read_text(encoding="utf-8")
+    assert "CCS_PORT" not in app_env.env_file.read_text(encoding="utf-8")
     assert os.environ.get("PATH") == path_before
 
 
@@ -334,16 +334,16 @@ def test_spa_route_survives_a_bad_address(
 ) -> None:
     dist = tmp_path / "dist"
     dist.mkdir()
-    index = "<!doctype html><title>Cashflow Studio</title>"
+    index = "<!doctype html><title>CashCow Studio</title>"
     (dist / "index.html").write_text(index, encoding="utf-8")
     (dist / "app.js").write_text("console.log(1)", encoding="utf-8")
-    monkeypatch.setenv("CFS_FRONTEND_DIST", str(dist))
+    monkeypatch.setenv("CCS_FRONTEND_DIST", str(dist))
     with TestClient(create_app(), raise_server_exceptions=False) as client:
         assert client.get("/app.js").text == "console.log(1)"
         for path in ("/%00", "/channels/%00x", "/" + "a" * 300):
             response = client.get(path)
             assert response.status_code == 200, path
-            assert "Cashflow Studio" in response.text
+            assert "CashCow Studio" in response.text
         assert client.get("/api/nothing-here").status_code == 404
 
 

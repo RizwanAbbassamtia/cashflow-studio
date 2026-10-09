@@ -1,4 +1,4 @@
-# Cashflow Studio
+# CashCow Studio
 
 Turns a list of competitor YouTube channels into finished faceless videos, with a human
 able to step in at every stage.

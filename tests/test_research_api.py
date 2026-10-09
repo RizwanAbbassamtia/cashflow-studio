@@ -10,11 +10,11 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
-from cashflow_studio.models.research import Tab, TabListing
-from cashflow_studio.pipeline.jobs import registry
-from cashflow_studio.research import jobs as research_jobs
-from cashflow_studio.research.errors import ResearchBlocked
-from cashflow_studio.research.mock import MockProvider
+from cashcow_studio.models.research import Tab, TabListing
+from cashcow_studio.pipeline.jobs import registry
+from cashcow_studio.research import jobs as research_jobs
+from cashcow_studio.research.errors import ResearchBlocked
+from cashcow_studio.research.mock import MockProvider
 from conftest import AppEnv, channel_payload
 
 CANDIDATE_FIELDS = {
@@ -29,7 +29,7 @@ CANDIDATE_FIELDS = {
 def research_client(
     app_env: AppEnv, client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> Iterator[TestClient]:
-    monkeypatch.setenv("CFS_RESEARCH_PROVIDER", "mock")
+    monkeypatch.setenv("CCS_RESEARCH_PROVIDER", "mock")
     registry.clear()
     assert client.post("/api/channels", json=channel_payload("Kind Ledger")).status_code == 201
     yield client

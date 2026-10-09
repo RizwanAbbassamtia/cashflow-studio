@@ -1,5 +1,5 @@
 /**
- * Mirror of backend/cashflow_studio/models/channel.py (Pydantic v2).
+ * Mirror of backend/cashcow_studio/models/channel.py (Pydantic v2).
  *
  * The Python module is the source of truth. Field names, enums and defaults here must stay
  * identical to it. Dates are ISO 8601 strings on the wire; URLs are plain strings.

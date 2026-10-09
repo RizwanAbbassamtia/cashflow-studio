@@ -10,17 +10,17 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
-from cashflow_studio.app import create_app
-from cashflow_studio.config import Settings, load_settings
-from cashflow_studio.pipeline.bootstrap import build_engine, max_parallel_projects
+from cashcow_studio.app import create_app
+from cashcow_studio.config import Settings, load_settings
+from cashcow_studio.pipeline.bootstrap import build_engine, max_parallel_projects
 from conftest import AppEnv
 
 
 @pytest.fixture
 def offline(monkeypatch: pytest.MonkeyPatch) -> None:
     for name in ("LLM", "RESEARCH", "IMAGE", "VOICE"):
-        monkeypatch.setenv(f"CFS_{name}_PROVIDER", "mock")
-    monkeypatch.delenv("CFS_MAX_PARALLEL_PROJECTS", raising=False)
+        monkeypatch.setenv(f"CCS_{name}_PROVIDER", "mock")
+    monkeypatch.delenv("CCS_MAX_PARALLEL_PROJECTS", raising=False)
 
 
 def test_get_returns_nested_defaults_and_provider_rows(client: TestClient) -> None:
@@ -163,7 +163,7 @@ def test_max_parallel_env_wins_over_settings(
 ) -> None:
     settings = Settings(pipeline={"max_parallel_projects": 5})
     assert max_parallel_projects(settings) == 5
-    monkeypatch.setenv("CFS_MAX_PARALLEL_PROJECTS", "1")
+    monkeypatch.setenv("CCS_MAX_PARALLEL_PROJECTS", "1")
     assert max_parallel_projects(settings) == 1
-    monkeypatch.setenv("CFS_MAX_PARALLEL_PROJECTS", "not-a-number")
+    monkeypatch.setenv("CCS_MAX_PARALLEL_PROJECTS", "not-a-number")
     assert max_parallel_projects(settings) == 5

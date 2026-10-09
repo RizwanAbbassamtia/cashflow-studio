@@ -1,5 +1,5 @@
 /**
- * Mirror of backend/cashflow_studio/models/research.py (docs/M1-M2-CONTRACT.md section 2).
+ * Mirror of backend/cashcow_studio/models/research.py (docs/M1-M2-CONTRACT.md section 2).
  *
  * A Candidate is one competitor video after the outlier maths. The research stage scans all
  * competitors of a channel, ranks their videos together and the AI pick is one of them.

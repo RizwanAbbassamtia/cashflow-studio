@@ -11,27 +11,27 @@ from typing import Any
 
 import pytest
 
-from cashflow_studio.config import Settings, load_settings
-from cashflow_studio.models.channel import Channel
-from cashflow_studio.models.project import Project, ProjectCreate, ProjectSource, StageName
-from cashflow_studio.models.research import Tab, TabListing, TranscriptDoc, VideoDetails
-from cashflow_studio.pipeline.engine import PipelineEngine
-from cashflow_studio.pipeline.stages.base import StageContext, StageError
-from cashflow_studio.research.cache import ResearchCache
-from cashflow_studio.research.config import ExclusionConfig, ResearchConfig
-from cashflow_studio.research.errors import ResearchBlocked
-from cashflow_studio.research.mock import MockProvider
-from cashflow_studio.research.outliers import build_candidates
-from cashflow_studio.research.research_stage import ResearchStage
-from cashflow_studio.research.scanner import (
+from cashcow_studio.config import Settings, load_settings
+from cashcow_studio.models.channel import Channel
+from cashcow_studio.models.project import Project, ProjectCreate, ProjectSource, StageName
+from cashcow_studio.models.research import Tab, TabListing, TranscriptDoc, VideoDetails
+from cashcow_studio.pipeline.engine import PipelineEngine
+from cashcow_studio.pipeline.stages.base import StageContext, StageError
+from cashcow_studio.research.cache import ResearchCache
+from cashcow_studio.research.config import ExclusionConfig, ResearchConfig
+from cashcow_studio.research.errors import ResearchBlocked
+from cashcow_studio.research.mock import MockProvider
+from cashcow_studio.research.outliers import build_candidates
+from cashcow_studio.research.research_stage import ResearchStage
+from cashcow_studio.research.scanner import (
     NOT_SCANNED,
     cached_outcome,
     candidates_for,
     history_for,
     scan_competitors,
 )
-from cashflow_studio.storage.channel_store import ChannelStore
-from cashflow_studio.storage.db import connect
+from cashcow_studio.storage.channel_store import ChannelStore
+from cashcow_studio.storage.db import connect
 from conftest import AppEnv, channel_payload
 
 NOW = datetime(2026, 10, 9, 12, 0, tzinfo=UTC)
@@ -44,7 +44,7 @@ CALM_VIDEO = "mkCv0000004"
 
 @pytest.fixture
 def settings(app_env: AppEnv, monkeypatch: pytest.MonkeyPatch) -> Settings:
-    monkeypatch.setenv("CFS_RESEARCH_PROVIDER", "mock")
+    monkeypatch.setenv("CCS_RESEARCH_PROVIDER", "mock")
     loaded = load_settings()
     loaded.ensure_dirs()
     return loaded
@@ -492,7 +492,7 @@ def test_async_progress_callbacks_are_awaited_on_the_event_loop(
 def test_stage_reads_the_provider_from_the_environment_when_none_is_given(
     settings: Settings, channel: Channel, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("CFS_RESEARCH_PROVIDER", "mock")
+    monkeypatch.setenv("CCS_RESEARCH_PROVIDER", "mock")
     project = make_project(tmp_path / "p1", ProjectSource(kind="ai_pick"))
     ctx = StageContext(
         project=project, channel=channel, settings=settings, folder=Path(project.folder)

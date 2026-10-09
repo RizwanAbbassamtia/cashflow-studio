@@ -1,4 +1,4 @@
-// Mirrors backend/cashflow_studio/models/project.py. Extend here when the model grows.
+// Mirrors backend/cashcow_studio/models/project.py. Extend here when the model grows.
 import type { Language, StageMode, StageName, VideoFormat } from "./channel";
 
 export const STAGE_ORDER: StageName[] = [
