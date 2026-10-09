@@ -1,0 +1,150 @@
+<svg style="font-family: Arial, Helvetica, sans-serif" xmlns="http://www.w3.org/2000/svg" width="2000" height="1640" viewBox="0 0 1000 820" role="img" aria-label="Eight stages from Research to Export drawn top to bottom, each with the service it calls on the left, the files it produces, and the human option on the right; amber gates sit between stages." fill="none" stroke="#121826" stroke-width="1.4">
+  <rect x="0" y="0" width="1000" height="820" fill="#FFFFFF"/><defs>
+    <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#121826" stroke="none"/></marker>
+  </defs>
+  <g font-size="11.5" fill="#121826" stroke="none" opacity="0.8">
+    <text x="124" y="40" text-anchor="middle" font-weight="600">Calls</text>
+    <text x="410" y="40" text-anchor="middle" font-weight="600">Stage</text>
+    <text x="548" y="40" font-weight="600">Produces</text>
+    <text x="790" y="40" font-weight="600" fill="#9A6B00" opacity="1">Human option</text>
+  </g>
+  <g>
+    <line x1="410" y1="116" x2="410" y2="154" marker-end="url(#a2)"/>
+    <line x1="410" y1="208" x2="410" y2="246" marker-end="url(#a2)"/>
+    <line x1="410" y1="300" x2="410" y2="338" marker-end="url(#a2)"/>
+    <line x1="410" y1="392" x2="410" y2="430" marker-end="url(#a2)"/>
+    <line x1="410" y1="484" x2="410" y2="522" marker-end="url(#a2)"/>
+    <line x1="410" y1="576" x2="410" y2="614" marker-end="url(#a2)"/>
+    <line x1="410" y1="668" x2="410" y2="706" marker-end="url(#a2)"/>
+  </g>
+  <g fill="#FFC000" stroke="none">
+    <polygon points="410,125 421,136 410,147 399,136"/>
+    <polygon points="410,217 421,228 410,239 399,228"/>
+    <polygon points="410,309 421,320 410,331 399,320"/>
+    <polygon points="410,401 421,412 410,423 399,412"/>
+    <polygon points="410,493 421,504 410,515 399,504"/>
+    <polygon points="410,585 421,596 410,607 399,596"/>
+    <polygon points="410,677 421,688 410,699 399,688"/>
+  </g>
+  <text x="430" y="140" font-size="10.5" fill="#9A6B00" stroke="none">gate</text>
+  <rect x="24" y="70" width="200" height="40" rx="4" stroke-dasharray="5 4"/>
+  <text x="124" y="87" font-size="11.5" text-anchor="middle" fill="#121826" stroke="none">yt-dlp → YouTube</text>
+  <text x="124" y="101" font-size="10.5" text-anchor="middle" fill="#121826" stroke="none" opacity="0.75">metadata, transcripts, thumbnails only</text>
+  <line x1="224" y1="90" x2="300" y2="90" stroke-dasharray="4 3" marker-end="url(#a2)"/>
+  <rect x="300" y="64" width="220" height="52" rx="6" stroke-width="1.8"/>
+  <text x="410" y="96" font-size="14" text-anchor="middle" fill="#121826" stroke="none" font-weight="600">1 · Research</text>
+  <g font-family="Consolas, Courier New, monospace" font-size="11" fill="#121826" stroke="none">
+    <text x="548" y="86">candidates.json (outlier scores)</text>
+    <text x="548" y="100">transcript.json</text>
+    <text x="548" y="114">competitor_thumbnail.jpg</text>
+  </g>
+  <g font-size="11.5" fill="#9A6B00" stroke="none">
+    <text x="790" y="86">pick a candidate</text>
+    <text x="790" y="100">or type your own topic</text>
+  </g>
+  <rect x="24" y="162" width="200" height="40" rx="4" stroke-dasharray="5 4"/>
+  <text x="124" y="179" font-size="11.5" text-anchor="middle" fill="#121826" stroke="none">Claude Opus 5.5</text>
+  <text x="124" y="193" font-size="10.5" text-anchor="middle" fill="#121826" stroke="none" opacity="0.75">+ title framework</text>
+  <line x1="224" y1="182" x2="300" y2="182" stroke-dasharray="4 3" marker-end="url(#a2)"/>
+  <rect x="300" y="156" width="220" height="52" rx="6" stroke-width="1.8"/>
+  <text x="410" y="188" font-size="14" text-anchor="middle" fill="#121826" stroke="none" font-weight="600">2 · Title</text>
+  <g font-family="Consolas, Courier New, monospace" font-size="11" fill="#121826" stroke="none">
+    <text x="548" y="178">title.json</text>
+    <text x="548" y="192">7 variants, keywords kept,</text>
+    <text x="548" y="206">viral score, copy check</text>
+  </g>
+  <g font-size="11.5" fill="#9A6B00" stroke="none">
+    <text x="790" y="178">edit or choose a variant</text>
+  </g>
+  <rect x="24" y="254" width="200" height="40" rx="4" stroke-dasharray="5 4"/>
+  <text x="124" y="271" font-size="11.5" text-anchor="middle" fill="#121826" stroke="none">Claude Opus 5.5</text>
+  <text x="124" y="285" font-size="10.5" text-anchor="middle" fill="#121826" stroke="none" opacity="0.75">+ script framework, target language</text>
+  <line x1="224" y1="274" x2="300" y2="274" stroke-dasharray="4 3" marker-end="url(#a2)"/>
+  <rect x="300" y="248" width="220" height="52" rx="6" stroke-width="1.8"/>
+  <text x="410" y="280" font-size="14" text-anchor="middle" fill="#121826" stroke="none" font-weight="600">3 · Script</text>
+  <g font-family="Consolas, Courier New, monospace" font-size="11" fill="#121826" stroke="none">
+    <text x="548" y="270">script.md + script.json</text>
+    <text x="548" y="284">sections, sentences,</text>
+    <text x="548" y="298">originality check passed</text>
+  </g>
+  <g font-size="11.5" fill="#9A6B00" stroke="none">
+    <text x="790" y="270">edit text, regenerate a section,</text>
+    <text x="790" y="284">lock paragraphs</text>
+  </g>
+  <rect x="24" y="346" width="200" height="40" rx="4" stroke-dasharray="5 4"/>
+  <text x="124" y="363" font-size="11.5" text-anchor="middle" fill="#121826" stroke="none">Claude Sonnet 5.5</text>
+  <text x="124" y="377" font-size="10.5" text-anchor="middle" fill="#121826" stroke="none" opacity="0.75">+ channel style guide</text>
+  <line x1="224" y1="366" x2="300" y2="366" stroke-dasharray="4 3" marker-end="url(#a2)"/>
+  <rect x="300" y="340" width="220" height="52" rx="6" stroke-width="1.8"/>
+  <text x="410" y="372" font-size="14" text-anchor="middle" fill="#121826" stroke="none" font-weight="600">4 · Storyboard</text>
+  <g font-family="Consolas, Courier New, monospace" font-size="11" fill="#121826" stroke="none">
+    <text x="548" y="362">storyboard.json: per scene</text>
+    <text x="548" y="376">narration, image prompt, popup,</text>
+    <text x="548" y="390">motion, transition</text>
+  </g>
+  <g font-size="11.5" fill="#9A6B00" stroke="none">
+    <text x="790" y="362">edit any scene field,</text>
+    <text x="790" y="376">split or merge scenes</text>
+  </g>
+  <rect x="24" y="438" width="200" height="40" rx="4" stroke-dasharray="5 4"/>
+  <text x="124" y="455" font-size="11.5" text-anchor="middle" fill="#121826" stroke="none">ai33 voice clone</text>
+  <text x="124" y="469" font-size="10.5" text-anchor="middle" fill="#121826" stroke="none" opacity="0.75">per sentence; word timings</text>
+  <line x1="224" y1="458" x2="300" y2="458" stroke-dasharray="4 3" marker-end="url(#a2)"/>
+  <rect x="300" y="432" width="220" height="52" rx="6" stroke-width="1.8"/>
+  <text x="410" y="464" font-size="14" text-anchor="middle" fill="#121826" stroke="none" font-weight="600">5 · Voice</text>
+  <g font-family="Consolas, Courier New, monospace" font-size="11" fill="#121826" stroke="none">
+    <text x="548" y="454">voice.wav</text>
+    <text x="548" y="468">timing.json (words, sentences)</text>
+    <text x="548" y="482">= the clock for everything after</text>
+  </g>
+  <g font-size="11.5" fill="#9A6B00" stroke="none">
+    <text x="790" y="454">upload your own recording,</text>
+    <text x="790" y="468">re-record a sentence</text>
+  </g>
+  <rect x="24" y="530" width="200" height="40" rx="4" stroke-dasharray="5 4"/>
+  <text x="124" y="547" font-size="11.5" text-anchor="middle" fill="#121826" stroke="none">Google image model</text>
+  <text x="124" y="561" font-size="10.5" text-anchor="middle" fill="#121826" stroke="none" opacity="0.75">+ Claude vision checks each image</text>
+  <line x1="224" y1="550" x2="300" y2="550" stroke-dasharray="4 3" marker-end="url(#a2)"/>
+  <rect x="300" y="524" width="220" height="52" rx="6" stroke-width="1.8"/>
+  <text x="410" y="556" font-size="14" text-anchor="middle" fill="#121826" stroke="none" font-weight="600">6 · Images</text>
+  <g font-family="Consolas, Courier New, monospace" font-size="11" fill="#121826" stroke="none">
+    <text x="548" y="546">scene_01.png … scene_40.png</text>
+    <text x="548" y="560">text-free, one style sheet,</text>
+    <text x="548" y="574">rejected/ for failed QA</text>
+  </g>
+  <g font-size="11.5" fill="#9A6B00" stroke="none">
+    <text x="790" y="546">regenerate with a note,</text>
+    <text x="790" y="560">upload or lock an image</text>
+  </g>
+  <rect x="24" y="622" width="200" height="40" rx="4" stroke-dasharray="5 4"/>
+  <text x="124" y="639" font-size="11.5" text-anchor="middle" fill="#121826" stroke="none">FFmpeg (on the laptop)</text>
+  <text x="124" y="653" font-size="10.5" text-anchor="middle" fill="#121826" stroke="none" opacity="0.75">zoom/pan, transitions, captions, music</text>
+  <line x1="224" y1="642" x2="300" y2="642" stroke-dasharray="4 3" marker-end="url(#a2)"/>
+  <rect x="300" y="616" width="220" height="52" rx="6" stroke-width="1.8"/>
+  <text x="410" y="648" font-size="14" text-anchor="middle" fill="#121826" stroke="none" font-weight="600">7 · Edit</text>
+  <g font-family="Consolas, Courier New, monospace" font-size="11" fill="#121826" stroke="none">
+    <text x="548" y="638">timeline.json, captions.ass</text>
+    <text x="548" y="652">proxy preview, then</text>
+    <text x="548" y="666">final_720p / 1080p / 2160p.mp4</text>
+  </g>
+  <g font-size="11.5" fill="#9A6B00" stroke="none">
+    <text x="790" y="638">built-in timeline editor, or</text>
+    <text x="790" y="652">Kdenlive · Resolve · CapCut</text>
+  </g>
+  <rect x="24" y="714" width="200" height="40" rx="4" stroke-dasharray="5 4"/>
+  <text x="124" y="731" font-size="11.5" text-anchor="middle" fill="#121826" stroke="none">Claude (SEO) + Google image</text>
+  <text x="124" y="745" font-size="10.5" text-anchor="middle" fill="#121826" stroke="none" opacity="0.75">thumbnail from competitor template</text>
+  <line x1="224" y1="734" x2="300" y2="734" stroke-dasharray="4 3" marker-end="url(#a2)"/>
+  <rect x="300" y="708" width="220" height="52" rx="6" stroke-width="1.8"/>
+  <text x="410" y="740" font-size="14" text-anchor="middle" fill="#121826" stroke="none" font-weight="600">8 · Export</text>
+  <g font-family="Consolas, Courier New, monospace" font-size="11" fill="#121826" stroke="none">
+    <text x="548" y="730">thumbnail.png, metadata.json</text>
+    <text x="548" y="744">disclosure flag, provenance.pdf</text>
+    <text x="548" y="758">copied to the export folder</text>
+  </g>
+  <g font-size="11.5" fill="#9A6B00" stroke="none">
+    <text x="790" y="730">approve, edit tags and</text>
+    <text x="790" y="744">description, re-export</text>
+  </g>
+  <text x="410" y="800" font-size="11" text-anchor="middle" fill="#121826" stroke="none" opacity="0.75">a failed quality gate (copied script, reused image, missing consent, unfulfilled title) blocks export until a reviewer overrides it with a logged reason</text>
+</svg>

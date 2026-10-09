@@ -1,0 +1,64 @@
+<svg style="font-family: Arial, Helvetica, sans-serif" xmlns="http://www.w3.org/2000/svg" width="2000" height="660" viewBox="0 0 1000 330" role="img" aria-label="Six timeline tracks over sixty seconds: voice sentences, scenes, images with zoom and pan and transitions at the scene boundaries, popups, captions and ducked music, all aligned to the voice." fill="none" stroke="#121826" stroke-width="1.2">
+  <rect x="0" y="0" width="1000" height="330" fill="#FFFFFF"/><defs>
+    <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#121826" stroke="none"/></marker>
+  </defs>
+  <line x1="140" y1="40" x2="960" y2="40"/>
+  <g font-size="10.5" fill="#121826" stroke="none" opacity="0.75">
+    <text x="140" y="30" text-anchor="middle">0 s</text><text x="277" y="30" text-anchor="middle">10</text><text x="413" y="30" text-anchor="middle">20</text><text x="550" y="30" text-anchor="middle">30</text><text x="687" y="30" text-anchor="middle">40</text><text x="823" y="30" text-anchor="middle">50</text><text x="960" y="30" text-anchor="middle">60 s</text>
+  </g>
+  <g>
+    <line x1="140" y1="36" x2="140" y2="44"/><line x1="277" y1="36" x2="277" y2="44"/><line x1="413" y1="36" x2="413" y2="44"/><line x1="550" y1="36" x2="550" y2="44"/><line x1="687" y1="36" x2="687" y2="44"/><line x1="823" y1="36" x2="823" y2="44"/><line x1="960" y1="36" x2="960" y2="44"/>
+  </g>
+  <g stroke="#9A6B00" stroke-dasharray="3 4" opacity="0.9">
+    <line x1="345" y1="56" x2="345" y2="296"/><line x1="564" y1="56" x2="564" y2="296"/><line x1="782" y1="56" x2="782" y2="296"/>
+  </g>
+  <g font-size="11.5" fill="#121826" stroke="none">
+    <text x="20" y="85">Voice (sentences)</text>
+    <text x="20" y="125">Scenes</text>
+    <text x="20" y="165">Images (zoom / pan)</text>
+    <text x="20" y="205">Popups (text)</text>
+    <text x="20" y="245">Captions (words)</text>
+    <text x="20" y="285">Music (ducked)</text>
+  </g>
+  <g fill="#E2E7F0">
+    <rect x="140" y="70" width="94" height="22" rx="2"/><rect x="236" y="70" width="109" height="22" rx="2"/><rect x="347" y="70" width="94" height="22" rx="2"/><rect x="443" y="70" width="121" height="22" rx="2"/><rect x="566" y="70" width="94" height="22" rx="2"/><rect x="662" y="70" width="120" height="22" rx="2"/><rect x="784" y="70" width="94" height="22" rx="2"/><rect x="880" y="70" width="80" height="22" rx="2"/>
+  </g>
+  <g font-size="10" fill="#121826" stroke="none" opacity="0.8" text-anchor="middle">
+    <text x="187" y="85">s1</text><text x="290" y="85">s2</text><text x="394" y="85">s3</text><text x="503" y="85">s4</text><text x="613" y="85">s5</text><text x="722" y="85">s6</text><text x="831" y="85">s7</text><text x="920" y="85">s8</text>
+  </g>
+  <g>
+    <rect x="140" y="110" width="205" height="22" rx="2"/><rect x="345" y="110" width="219" height="22" rx="2"/><rect x="564" y="110" width="218" height="22" rx="2"/><rect x="782" y="110" width="178" height="22" rx="2"/>
+  </g>
+  <g font-size="10.5" fill="#121826" stroke="none" text-anchor="middle">
+    <text x="242" y="125">scene 1 · s1–s2</text><text x="454" y="125">scene 2 · s3–s4</text><text x="673" y="125">scene 3 · s5–s6</text><text x="871" y="125">scene 4 · s7–s8</text>
+  </g>
+  <g>
+    <rect x="140" y="150" width="205" height="22" rx="2"/><rect x="345" y="150" width="219" height="22" rx="2"/><rect x="564" y="150" width="218" height="22" rx="2"/><rect x="782" y="150" width="178" height="22" rx="2"/>
+  </g>
+  <g font-size="10.5" fill="#121826" stroke="none" text-anchor="middle">
+    <text x="242" y="165">zoom in</text><text x="454" y="165">pan right</text><text x="673" y="165">zoom out</text><text x="871" y="165">slow push</text>
+  </g>
+  <g fill="#FFC000" stroke="none">
+    <polygon points="345,144 351,150 345,156 339,150"/><polygon points="564,144 570,150 564,156 558,150"/><polygon points="782,144 788,150 782,156 776,150"/>
+  </g>
+  <text x="345" y="186" font-size="10" fill="#9A6B00" stroke="none" text-anchor="middle">crossfade</text>
+  <text x="564" y="186" font-size="10" fill="#9A6B00" stroke="none" text-anchor="middle">wipe</text>
+  <text x="782" y="186" font-size="10" fill="#9A6B00" stroke="none" text-anchor="middle">zoom-through</text>
+  <g fill="#FFC000" stroke="none">
+    <rect x="181" y="193" width="55" height="18" rx="2"/><rect x="386" y="193" width="68" height="18" rx="2"/><rect x="605" y="193" width="82" height="18" rx="2"/><rect x="823" y="193" width="69" height="18" rx="2"/>
+  </g>
+  <g font-size="9.5" fill="#1B1500" stroke="none" text-anchor="middle">
+    <text x="208" y="206">key phrase</text><text x="420" y="206">key phrase</text><text x="646" y="206">key phrase</text><text x="857" y="206">key phrase</text>
+  </g>
+  <g fill="#E2E7F0">
+    <rect x="140" y="233" width="30" height="16"/><rect x="172" y="233" width="38" height="16"/><rect x="212" y="233" width="24" height="16"/><rect x="238" y="233" width="44" height="16"/><rect x="284" y="233" width="30" height="16"/><rect x="316" y="233" width="27" height="16"/>
+    <rect x="347" y="233" width="36" height="16"/><rect x="385" y="233" width="28" height="16"/><rect x="415" y="233" width="46" height="16"/><rect x="463" y="233" width="30" height="16"/><rect x="495" y="233" width="38" height="16"/><rect x="535" y="233" width="27" height="16"/>
+    <rect x="566" y="233" width="40" height="16"/><rect x="608" y="233" width="26" height="16"/><rect x="636" y="233" width="44" height="16"/><rect x="682" y="233" width="34" height="16"/><rect x="718" y="233" width="30" height="16"/><rect x="750" y="233" width="30" height="16"/>
+    <rect x="784" y="233" width="38" height="16"/><rect x="824" y="233" width="30" height="16"/><rect x="856" y="233" width="44" height="16"/><rect x="902" y="233" width="26" height="16"/><rect x="930" y="233" width="30" height="16"/>
+  </g>
+  <polyline points="140,272 148,272 156,288 944,288 952,272 960,272"/>
+  <text x="550" y="304" font-size="10" fill="#121826" stroke="none" text-anchor="middle" opacity="0.75">music drops about 12 dB while the voice plays and rises again at the end</text>
+  <line x1="345" y1="92" x2="345" y2="108" marker-end="url(#a3)" stroke="#9A6B00"/>
+  <line x1="564" y1="92" x2="564" y2="108" marker-end="url(#a3)" stroke="#9A6B00"/>
+  <line x1="782" y1="92" x2="782" y2="108" marker-end="url(#a3)" stroke="#9A6B00"/>
+</svg>

@@ -1,0 +1,41 @@
+<svg style="font-family: Arial, Helvetica, sans-serif" xmlns="http://www.w3.org/2000/svg" width="2000" height="580" viewBox="0 0 1000 290" role="img" aria-label="Storyboard and voice timing build a timeline file; FFmpeg renders it to three resolutions; a built-in editor edits the same file; an export to Kdenlive, Resolve or CapCut lets an external editor finish the video." fill="none" stroke="#121826" stroke-width="1.4">
+  <rect x="0" y="0" width="1000" height="290" fill="#FFFFFF"/><defs>
+    <marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#121826" stroke="none"/></marker>
+  </defs>
+  <rect x="20" y="118" width="200" height="52" rx="6"/>
+  <text x="120" y="139" font-size="12.5" text-anchor="middle" fill="#121826" stroke="none">storyboard.json</text>
+  <text x="120" y="156" font-size="12.5" text-anchor="middle" fill="#121826" stroke="none">+ timing.json + images</text>
+  <line x1="220" y1="144" x2="296" y2="144" marker-end="url(#a4)"/>
+  <text x="258" y="136" font-size="10.5" text-anchor="middle" fill="#121826" stroke="none" opacity="0.75">build</text>
+  <rect x="296" y="118" width="170" height="52" rx="6" stroke-width="2"/>
+  <text x="381" y="139" font-size="13" text-anchor="middle" fill="#121826" stroke="none" font-weight="600">timeline.json</text>
+  <text x="381" y="156" font-size="10.5" text-anchor="middle" fill="#121826" stroke="none" opacity="0.75">source of truth</text>
+  <line x1="466" y1="144" x2="542" y2="144" marker-end="url(#a4)"/>
+  <text x="504" y="136" font-size="10.5" text-anchor="middle" fill="#121826" stroke="none" opacity="0.75">render</text>
+  <rect x="542" y="118" width="150" height="52" rx="6"/>
+  <text x="617" y="139" font-size="12.5" text-anchor="middle" fill="#121826" stroke="none">FFmpeg</text>
+  <text x="617" y="156" font-size="10.5" text-anchor="middle" fill="#121826" stroke="none" opacity="0.75">proxy first, then final</text>
+  <rect x="780" y="50" width="200" height="36" rx="4"/><text x="880" y="73" font-size="12" text-anchor="middle" fill="#121826" stroke="none" font-family="Consolas, Courier New, monospace">final_720p.mp4</text>
+  <rect x="780" y="126" width="200" height="36" rx="4"/><text x="880" y="149" font-size="12" text-anchor="middle" fill="#121826" stroke="none" font-family="Consolas, Courier New, monospace">final_1080p.mp4</text>
+  <rect x="780" y="202" width="200" height="36" rx="4"/><text x="880" y="225" font-size="12" text-anchor="middle" fill="#121826" stroke="none" font-family="Consolas, Courier New, monospace">final_2160p.mp4 (4K)</text>
+  <line x1="692" y1="136" x2="780" y2="70" marker-end="url(#a4)"/>
+  <line x1="692" y1="144" x2="780" y2="144" marker-end="url(#a4)"/>
+  <line x1="692" y1="152" x2="780" y2="218" marker-end="url(#a4)"/>
+  <rect x="256" y="222" width="250" height="48" rx="6" stroke="#9A6B00" stroke-width="1.8"/>
+  <text x="381" y="242" font-size="12.5" text-anchor="middle" fill="#9A6B00" stroke="none" font-weight="600">Built-in timeline editor</text>
+  <text x="381" y="259" font-size="10.5" text-anchor="middle" fill="#121826" stroke="none" opacity="0.75">reorder, trim, swap image, text, music, transitions</text>
+  <line x1="366" y1="170" x2="366" y2="222" marker-end="url(#a4)"/>
+  <line x1="396" y1="222" x2="396" y2="170" marker-end="url(#a4)"/>
+  <text x="408" y="200" font-size="10.5" fill="#121826" stroke="none" opacity="0.75">edits save back</text>
+  <rect x="236" y="20" width="290" height="48" rx="6" stroke="#9A6B00" stroke-width="1.8"/>
+  <text x="381" y="40" font-size="12.5" text-anchor="middle" fill="#9A6B00" stroke="none" font-weight="600">Export project to your editor</text>
+  <text x="381" y="57" font-size="10.5" text-anchor="middle" fill="#121826" stroke="none" opacity="0.75">Kdenlive (free) · DaVinci Resolve (FCPXML) · CapCut draft</text>
+  <line x1="381" y1="118" x2="381" y2="68" marker-end="url(#a4)"/>
+  <text x="392" y="96" font-size="10.5" fill="#121826" stroke="none" opacity="0.75">hand-off</text>
+  <rect x="560" y="20" width="160" height="48" rx="6" stroke-dasharray="5 4"/>
+  <text x="640" y="40" font-size="12" text-anchor="middle" fill="#121826" stroke="none">finished in the</text>
+  <text x="640" y="57" font-size="12" text-anchor="middle" fill="#121826" stroke="none">external editor</text>
+  <line x1="526" y1="44" x2="560" y2="44" marker-end="url(#a4)"/>
+  <line x1="720" y1="44" x2="780" y2="62" stroke-dasharray="4 3" marker-end="url(#a4)"/>
+  <text x="736" y="36" font-size="10.5" fill="#121826" stroke="none" opacity="0.75">imported back</text>
+</svg>
