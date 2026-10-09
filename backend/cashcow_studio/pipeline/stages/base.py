@@ -20,13 +20,20 @@ How the engine (``pipeline/engine.py``) uses a stage:
   with ``edits``, the engine calls it with ``ctx.edits`` filled instead of ``run``. Without
   the hook the engine stores the edits in ``<stage dir>/edits.json`` and, for the title stage,
   copies ``title_text`` / the ``chosen_index`` variant into ``project.title``.
+* Optional hook ``on_approve(ctx)``: called by the engine every time the stage is approved,
+  after any ``apply_edits``; the export stage copies the finished files into the export
+  folder here, so nothing leaves the project folder before a person approved it.
 * Raise ``StageError`` with a plain-English message to fail the stage, ``GateBlocked`` when a
   quality gate blocks it, ``NotImplementedStage`` when the runner is not built yet (the engine
   then marks the stage ``awaiting_manual`` so the project can be advanced by hand).
+* Work that writes files or runs FFmpeg goes through :func:`run_in_thread`, which waits for
+  the thread when the run is cancelled (archive, shutdown) so no file is written into a
+  folder that is being moved.
 """
 
 from __future__ import annotations
 
+import asyncio
 import threading
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
@@ -119,6 +126,34 @@ class StageResult:
     """What the review screen shows for this stage (JSON-serialisable)."""
     gate_results: list[dict[str, Any]] = field(default_factory=list)
     """``[{id, title, severity, passed, detail}]`` from the policy gates."""
+
+
+THREAD_FINISH_WAIT_S = 90.0
+"""How long a cancelled stage waits for its worker thread (an FFmpeg render, a provider
+call) to come back before the engine moves on. The thread sees ``ctx.cancel`` and the
+media tools are killed on it, so this is a backstop, not the usual wait."""
+
+
+async def run_in_thread(
+    ctx: StageContext, work: Callable[[], Any], *, finish_wait_s: float = THREAD_FINISH_WAIT_S
+) -> Any:
+    """Run ``work`` in a worker thread. When the task is cancelled (archive, shutdown), set
+    the stage's cancel flag and wait for the thread to finish before giving up, so nothing
+    is written into a folder that is being moved and no FFmpeg child outlives the stage.
+
+    Every stage uses this instead of ``asyncio.to_thread`` for work that writes files or
+    runs a media tool: ``to_thread`` abandons the thread on cancel."""
+    loop = asyncio.get_running_loop()
+    future = loop.run_in_executor(None, work)
+    try:
+        return await asyncio.shield(future)
+    except asyncio.CancelledError:
+        ctx.cancel.set()
+        try:
+            await asyncio.wait_for(asyncio.shield(future), timeout=finish_wait_s)
+        except (asyncio.CancelledError, TimeoutError, Exception):  # noqa: BLE001
+            pass
+        raise
 
 
 class Stage(Protocol):

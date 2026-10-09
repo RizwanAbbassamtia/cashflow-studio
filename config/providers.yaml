@@ -36,11 +36,56 @@ voice:
     max_chars: null
     key_env: AI33_API_KEY
     docs_url: ""
-    notes: "The team's own voice tool, named 2026-10-09. Website and API documentation still needed; the adapter arrives when they are available."
+    notes: "The team's own voice tool, named 2026-10-09. Website and API documentation still needed. Once known, fill in the http section below (same shape as generic_http) and the app calls it without a code change."
+    # To connect ai33 without code, uncomment and fill in this recipe (see generic_http):
+    # http:
+    #   url: "https://api.ai33.example/v1/tts"
+    #   method: POST
+    #   headers: {Authorization: "Bearer ${AI33_API_KEY}", Content-Type: application/json}
+    #   body_template: {text: "{{text}}", voice_id: "{{voice}}", language: "{{language}}", speed: "{{speed}}"}
+    #   response: {kind: json, audio_field: audio, audio_encoding: base64, audio_format: mp3, word_timings_path: words, word_fields: {text: word, start: start, end: end}, time_unit: s}
+
+  generic_http:
+    # Template for any voice tool with a plain HTTP API. Copy this block under a new id (or
+    # fill in ai33's http section above). ${NAME} in headers/url is replaced by that
+    # environment variable (saved in Settings > API keys); {{text}} {{voice}} {{language}}
+    # {{speed}} {{model}} {{style}} {{sample_rate}} are filled in per sentence. A body value
+    # that is exactly one placeholder keeps its type ("{{speed}}" is sent as a number).
+    name: "Generic HTTP voice (set up in this file)"
+    adapter: ready
+    clone: false
+    languages: []
+    timestamp_granularity: unknown
+    billing_unit: character
+    price_per_unit_usd: 0
+    max_chars: null
+    key_env: GENERIC_VOICE_API_KEY
+    default_model: ""
+    notes: "Driven by the http section below; nothing is called until url is filled in."
+    http:
+      url: ""                # e.g. https://api.example.com/v1/tts ; empty = not configured
+      method: POST
+      headers:
+        Authorization: "Bearer ${GENERIC_VOICE_API_KEY}"
+        Content-Type: application/json
+      body_template:
+        text: "{{text}}"
+        voice: "{{voice}}"
+        language: "{{language}}"
+        speed: "{{speed}}"
+      response:
+        kind: json           # json = audio inside a JSON answer; audio = the answer IS the file
+        audio_field: audio   # dotted path to base64 (or hex) audio text
+        audio_encoding: base64
+        audio_url_field: ""  # or: dotted path to a URL the audio is downloaded from
+        audio_format: mp3    # what the bytes are: mp3, wav, flac, ogg, pcm (+ pcm_sample_rate)
+        word_timings_path: ""   # dotted path to a list of word timings, if the tool has them
+        word_fields: {text: text, start: start, end: end, confidence: confidence}
+        time_unit: s         # s or ms
 
   minimax:
     name: "MiniMax Speech"
-    adapter: planned
+    adapter: ready
     clone: true
     languages: ["English", "Spanish", "Hindi", "Arabic", "Portuguese", "Indonesian", "Japanese", "German", "French", "Russian", "Vietnamese", "Turkish", "Korean", "Italian"]
     timestamp_granularity: word
@@ -48,13 +93,17 @@ voice:
     price_per_unit_usd: 0.0001   # speech-2.8-hd: $100 per 1M characters (turbo: $60)
     max_chars: 10000
     key_env: MINIMAX_API_KEY
-    docs_url: "https://platform.minimax.io/docs/guides/pricing-paygo"
-    notes: "Native word timestamps; rapid voice cloning $1.50 per voice. Also needs MINIMAX_GROUP_ID."
+    extra_key_envs: [MINIMAX_GROUP_ID]
+    models: [speech-2.8-hd, speech-2.8-turbo]
+    default_model: speech-2.8-hd
+    base_url: "https://api.minimax.io"
+    docs_url: "https://platform.minimax.io/docs/api-reference/speech-t2a-http"
+    notes: "Per-sentence synthesis with subtitle timing (phrases cut into words by the app); rapid voice cloning $1.50 per voice. Also needs MINIMAX_GROUP_ID."
     verified_on: "2026-10-09"
 
   cartesia:
     name: "Cartesia Sonic"
-    adapter: planned
+    adapter: ready
     clone: true
     languages: []
     timestamp_granularity: word
@@ -62,8 +111,11 @@ voice:
     price_per_unit_usd: 0        # credit-based plans; fill in from the plan
     max_chars: null
     key_env: CARTESIA_API_KEY
-    docs_url: "https://docs.cartesia.ai/api-reference/tts/tts"
-    notes: "Word timestamps only on the streaming endpoints."
+    models: [sonic-3, sonic-2, sonic-turbo]
+    default_model: sonic-3
+    base_url: "https://api.cartesia.ai"
+    docs_url: "https://docs.cartesia.ai/api-reference/tts/sse"
+    notes: "Word timestamps come from the streaming (SSE) endpoint, which the adapter uses."
     verified_on: "2026-10-09"
 
   inworld:
@@ -100,7 +152,7 @@ image:
     models: [mock-placeholder]
     default_model: mock-placeholder
     aspects: ["16:9", "9:16", "1:1", "4:3", "3:4", "3:2", "2:3", "4:5", "5:4", "21:9"]
-    sizes: ["1K", "2K", "4K"]
+    sizes: ["1K", "2K"]      # placeholders stay small: 2K is the largest the mock offers
     max_reference_images: 14
     provenance: {c2pa: false, synthid: false}
     price_per_image_usd: 0

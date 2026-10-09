@@ -105,8 +105,13 @@ EXPECTED_OUTPUT: dict[StageName, str] = {
     StageName.title: "title.json",
     StageName.script: "script.json",
     StageName.storyboard: "storyboard.json",
+    StageName.voice: "voice.wav",
+    StageName.images: "scene_01.png",
+    StageName.edit: "final_*.mp4",
+    StageName.export: "metadata.json",
 }
-"""The file a person must supply before a manual stage counts as done."""
+"""The file a person must supply before a manual stage counts as done. A ``*`` stands for
+any name part (the edit step needs a rendered ``final_<size>.mp4``, whatever the size)."""
 
 
 class EngineError(Exception):
@@ -292,6 +297,7 @@ class PipelineEngine:
             missing = _missing_manual_output(project, stage)
             if missing:
                 raise InvalidTransition(missing)
+            await self._finish_manual(project, stage)
             _mark_done(
                 project, stage, "Continued after a manual change: the files were supplied by hand."
             )
@@ -572,6 +578,7 @@ class PipelineEngine:
             missing = _missing_manual_output(project, stage)
             if missing:
                 raise InvalidTransition(missing)
+            await self._finish_manual(project, stage)
         if edits:
             # Busy while the edits are applied: a second click cannot start the same work
             # twice (the research hook reads the chosen video from YouTube).
@@ -581,6 +588,7 @@ class PipelineEngine:
             finally:
                 if self._active.get(project.id) is project:
                     self._active.pop(project.id, None)
+        await self._on_approve(project, stage, edits, who)
         if notes and notes.strip():
             state.notes.append(notes.strip())
         state.pending_edits = {}
@@ -647,6 +655,9 @@ class PipelineEngine:
                 continue
             if later:
                 _reset_later(project, name, stage)
+        # The old grid must not be served while (or after) the stage runs again: a run that
+        # blocks writes its own payload, and a failed one must not show the previous run.
+        _forget_payload(project, stage)
         project.current_stage = stage
         self._save(project)
         self._schedule(project.id)
@@ -703,7 +714,12 @@ class PipelineEngine:
                 await task
             except (asyncio.CancelledError, Exception):  # noqa: BLE001
                 pass
-        self._active.pop(project_id, None)
+        if project_id in self._active:
+            # Approval edits are being applied on another request (no task to wait for).
+            raise ProjectBusy(
+                "This project is busy applying a reviewer's changes. Wait until that "
+                "finishes, then archive it."
+            )
         self._contexts.pop(project_id, None)
         project = self.store.get(project_id)
         destination = self.store.archive(project_id)
@@ -740,7 +756,82 @@ class PipelineEngine:
         self._active.clear()
         self._contexts.clear()
 
+    # Manual stages ------------------------------------------------------------------------
+
+    async def _finish_manual(self, project: Project, stage: StageName) -> None:
+        """Let a manual stage finish what a person supplied by hand.
+
+        Optional stage hook ``finish_manual(ctx) -> StageResult | None``: the voice stage
+        builds ``timing.json`` (the clock for every later step) from a ``voice.wav`` that was
+        dropped into ``05_voice``. A hook that returns a result replaces the stage's summary
+        and review payload; a stage without the hook is simply marked done by the caller.
+        """
+        if project.stage_modes.for_stage(stage) != "manual":
+            return
+        runner = self.stages.get(stage)
+        hook = getattr(runner, "finish_manual", None)
+        if runner is None or not callable(hook):
+            return
+        try:
+            channel = self.channels.get(project.channel_slug)
+        except ChannelNotFound as exc:
+            raise InvalidTransition(
+                f"The channel '{project.channel_slug}' no longer exists, so the "
+                f"{stage.value} files cannot be checked."
+            ) from exc
+        ctx = self._context(project, channel, stage)
+        self._active[project.id] = project
+        try:
+            result = await hook(ctx)
+        except (StageError, LLMError) as exc:
+            _history(project, stage, f"The files supplied by hand could not be used: {exc}")
+            self._save(project)
+            raise InvalidTransition(
+                f"The {stage.value} files could not be used: {exc}"
+            ) from exc
+        finally:
+            if self._active.get(project.id) is project:
+                self._active.pop(project.id, None)
+        if result is not None:
+            self._record_result(project, stage, result)
+            outputs = ", ".join(_relative(project, path) for path in result.outputs) or "no files"
+            _history(project, stage, f"Files supplied by hand were prepared. Wrote: {outputs}.")
+
     # Edits --------------------------------------------------------------------------------
+
+    async def _on_approve(
+        self, project: Project, stage: StageName, edits: dict[str, Any] | None, who: str
+    ) -> None:
+        """Optional stage hook ``on_approve(ctx) -> StageResult | None``, called on every
+        approval after the edits were applied: the export stage copies the pack into the
+        export folder here (Approve = export). A result replaces the summary and payload."""
+        runner = self.stages.get(stage)
+        hook = getattr(runner, "on_approve", None)
+        if runner is None or not callable(hook):
+            return
+        try:
+            channel = self.channels.get(project.channel_slug)
+        except ChannelNotFound as exc:
+            raise InvalidTransition(
+                f"The channel '{project.channel_slug}' no longer exists, so this step cannot "
+                "be approved."
+            ) from exc
+        ctx = self._context(project, channel, stage)
+        ctx.edits = dict(edits or {})
+        self._active[project.id] = project
+        self._contexts[project.id] = ctx
+        try:
+            result = await hook(ctx)
+        except (StageError, LLMError) as exc:
+            raise InvalidTransition(f"The step could not be approved: {exc}") from exc
+        finally:
+            if self._active.get(project.id) is project:
+                self._active.pop(project.id, None)
+            if self._contexts.get(project.id) is ctx:
+                self._contexts.pop(project.id, None)
+        if result is not None:
+            self._record_result(project, stage, result)
+            _history(project, stage, f"On approval by {who}: {result.summary}")
 
     async def _apply_edits(
         self, project: Project, stage: StageName, edits: dict[str, Any], who: str
@@ -876,11 +967,18 @@ def _missing_manual_output(project: Project, stage: StageName) -> str | None:
     name = EXPECTED_OUTPUT.get(stage)
     if name is None:
         return None
-    if (Path(project.folder) / STAGE_DIRS[stage] / name).is_file():
-        return None
+    stage_dir = Path(project.folder) / STAGE_DIRS[stage]
+    try:
+        if any(path.is_file() for path in stage_dir.glob(name)):
+            return None
+    except OSError:
+        pass
+    wanted = name
+    if "*" in name:
+        wanted = f"a {name} file (for example {name.replace('*', '1080p')})"
     return (
         f"The {stage.value} step is set to manual and {STAGE_DIRS[stage]}/{name} is not there "
-        f"yet. Put {name} in {STAGE_DIRS[stage]} first, then press Run."
+        f"yet. Put {wanted} in {STAGE_DIRS[stage]} first, then press Run."
     )
 
 
@@ -945,7 +1043,13 @@ def _reset_later(project: Project, stage: StageName, because: StageName) -> None
     state.summary = ""
     state.gate_results = []
     state.pending_edits = {}
-    # The old review payload would otherwise show up for a stage that has not run again.
+    _forget_payload(project, stage)
+    _history(project, stage, f"Reset because the {because.value} step was redone.")
+
+
+def _forget_payload(project: Project, stage: StageName) -> None:
+    """Remove a stage's saved review payload: it would otherwise show up for a stage that
+    has not run again (or that ran again and failed)."""
     payload = Path(project.folder) / STAGE_DIRS[stage] / REVIEW_PAYLOAD_FILE
     try:
         payload.unlink()
@@ -953,7 +1057,6 @@ def _reset_later(project: Project, stage: StageName, because: StageName) -> None
         pass
     except OSError as exc:
         log.warning("Could not remove the old review payload %s: %s", payload, exc)
-    _history(project, stage, f"Reset because the {because.value} step was redone.")
 
 
 def _history(project: Project, stage: StageName, text: str) -> None:

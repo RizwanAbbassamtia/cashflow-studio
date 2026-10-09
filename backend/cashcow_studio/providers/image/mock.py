@@ -2,14 +2,17 @@
 
 ``CCS_IMAGE_PROVIDER=mock`` (the default) selects it, so the Storyboard Board shows
 pictures offline and tests never spend money. The picture has the requested aspect and
-size, a background colour derived from the prompt (or the seed) and the prompt text itself,
-so a reviewer can tell scenes apart. The same request always produces the same bytes.
+size, a background colour and a few large soft shapes derived from the seed (or the prompt
+when there is no seed), and the prompt text itself, so a reviewer can tell scenes apart and
+the perceptual hash of two different seeds differs. The same request always produces the
+same bytes.
 """
 
 from __future__ import annotations
 
 import colorsys
 import hashlib
+import random
 import textwrap
 from pathlib import Path
 
@@ -23,6 +26,7 @@ MOCK_ID = "mock"
 MOCK_MODEL = "mock-placeholder"
 TEXT_COLOUR = (255, 255, 255)
 MAX_PROMPT_CHARS = 1000
+SHAPE_COUNT = 4
 
 
 def default_capabilities() -> ImageCapabilities:
@@ -32,6 +36,7 @@ def default_capabilities() -> ImageCapabilities:
         adapter="ready",
         models=[MOCK_MODEL],
         default_model=MOCK_MODEL,
+        sizes=["1K", "2K"],
         max_reference_images=14,
         provenance=Provenance(c2pa=False, synthid=False),
         price_per_image_usd=0.0,
@@ -54,10 +59,34 @@ def background_colour(seed: int) -> tuple[int, int, int]:
     return int(red * 255), int(green * 255), int(blue * 255)
 
 
+def _shade(colour: tuple[int, int, int], factor: float) -> tuple[int, int, int]:
+    return tuple(max(0, min(255, int(c * factor))) for c in colour)  # type: ignore[return-value]
+
+
+def draw_shapes(draw: ImageDraw.ImageDraw, width: int, height: int, seed: int,
+                base: tuple[int, int, int]) -> None:
+    """A few large shapes placed by the seed: what makes two seeds look different."""
+    rng = random.Random(seed)
+    for index in range(SHAPE_COUNT):
+        factor = 0.55 + 0.25 * index if index % 2 == 0 else 1.25 + 0.15 * index
+        colour = _shade(base, factor)
+        w = int(width * rng.uniform(0.25, 0.6))
+        h = int(height * rng.uniform(0.25, 0.6))
+        x = int(rng.uniform(-0.1, 0.8) * width)
+        y = int(rng.uniform(-0.1, 0.8) * height)
+        box = [x, y, x + w, y + h]
+        if rng.random() < 0.5:
+            draw.ellipse(box, fill=colour)
+        else:
+            draw.rectangle(box, fill=colour)
+
+
 def render_placeholder(request: ImageRequest, seed: int) -> Image.Image:
     width, height = pixel_size(request.aspect, request.size)
-    image = Image.new("RGB", (width, height), background_colour(seed))
+    base = background_colour(seed)
+    image = Image.new("RGB", (width, height), base)
     draw = ImageDraw.Draw(image)
+    draw_shapes(draw, width, height, seed, base)
 
     body_px = max(14, min(width, height) // 28)
     small_px = max(12, body_px * 3 // 4)
@@ -97,8 +126,11 @@ class MockImageProvider:
 
     def __init__(self, capabilities: ImageCapabilities | None = None) -> None:
         self.capabilities = capabilities or default_capabilities()
+        self.calls: list[ImageRequest] = []
+        """Every request, so tests can see what the stage sent (seeds, references, sizes)."""
 
     def generate(self, request: ImageRequest) -> ImageResult:
+        self.calls.append(request)
         seed = seed_for(request)
         image = render_placeholder(request, seed)
         info = PngInfo()
@@ -111,7 +143,7 @@ class MockImageProvider:
             path=path,
             width=image.width,
             height=image.height,
-            model=MOCK_MODEL,
+            model=request.model or MOCK_MODEL,
             seed=seed,
             provenance=self.capabilities.provenance.model_copy(),
             cost_usd=0.0,

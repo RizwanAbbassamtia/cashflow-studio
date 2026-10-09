@@ -1,0 +1,56 @@
+# Caption and popup rules per language (backend/cashcow_studio/render/captions.py and
+# render/popups.py). Fonts are the Noto files vendored in assets/fonts; a language that is not
+# listed uses `default`. Settings > Render chooses the named style (`styles`).
+
+pause_break_s: 0.35         # a silence longer than this ends a caption
+
+default:
+  font: Noto Sans
+  popup_font: Noto Sans
+  rtl: false
+  max_chars_per_line: 42
+  max_lines: 2
+  space_dependent: true     # words are joined with spaces and lines break at spaces
+  size: 48                  # pixels at 1080p
+
+by_language:
+  Arabic:
+    font: Noto Naskh Arabic
+    popup_font: Noto Sans Arabic
+    rtl: true
+    max_chars_per_line: 36
+  Urdu:
+    font: Noto Naskh Arabic
+    popup_font: Noto Sans Arabic
+    rtl: true
+    max_chars_per_line: 36
+  Hindi:
+    font: Noto Sans Devanagari
+    popup_font: Noto Sans Devanagari
+    max_chars_per_line: 36
+  Japanese:
+    font: Noto Sans JP
+    popup_font: Noto Sans JP
+    max_chars_per_line: 13
+    space_dependent: false  # no spaces between words; lines break by character count
+  Korean:
+    font: Noto Sans KR
+    popup_font: Noto Sans KR
+    max_chars_per_line: 20
+
+styles:
+  bold-white:
+    primary: "#FFFFFF"
+    outline_colour: "#000000"
+    bold: true
+    outline: 2
+  yellow:
+    primary: "#FFE34D"
+    outline_colour: "#000000"
+    bold: true
+    outline: 2
+  clean:
+    primary: "#FFFFFF"
+    outline_colour: "#202020"
+    bold: false
+    outline: 1

@@ -240,7 +240,7 @@ def test_registry_unknown_provider_does_not_raise(
     no_provider_env: None, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     monkeypatch.setenv("CCS_IMAGE_PROVIDER", "nope")
-    monkeypatch.setenv("CCS_VOICE_PROVIDER", "minimax")  # listed, adapter not built yet
+    monkeypatch.setenv("CCS_VOICE_PROVIDER", "inworld")  # listed, adapter not built yet
     providers = registry.build_providers()
     image, voice = providers["image"], providers["voice"]
     assert isinstance(image, ImageProvider) and isinstance(voice, VoiceProvider)
@@ -252,7 +252,7 @@ def test_registry_unknown_provider_does_not_raise(
         image.generate(ImageRequest(prompt="x", output_path=tmp_path / "x.png"))
 
     assert voice.health().status == "planned"
-    assert voice.capabilities.name == "MiniMax Speech"
+    assert voice.capabilities.name == "Inworld TTS"
     with pytest.raises(ProviderNotConfigured, match="later version"):
         voice.synthesize(SynthRequest(text="Hello", output_path=tmp_path / "v.wav"))
 
@@ -390,7 +390,8 @@ def test_catalog_loads_repo_yaml() -> None:
     assert gemini.price_by_size_usd["2K"] == pytest.approx(0.0504)
     assert gemini.provenance.synthid is True
     assert gemini.max_reference_images == 14
-    assert catalog.voice["minimax"].adapter == "planned"
+    assert catalog.voice["minimax"].adapter == "ready"
+    assert catalog.voice["inworld"].adapter == "planned"
     assert catalog.voice["ai33"].adapter == "stub"
 
 
@@ -441,8 +442,9 @@ def test_list_provider_status_never_leaks_keys(
     assert by_id[("image", "gemini")].status == "ok"
     assert by_id[("image", "mock")].status == "ok"
     assert by_id[("voice", "ai33")].status == "not_configured"
-    assert by_id[("voice", "minimax")].status == "planned"
-    assert by_id[("voice", "minimax")].capabilities["timestamp_granularity"] == "word"
+    assert by_id[("voice", "minimax")].status == "not_configured"
+    assert by_id[("voice", "inworld")].status == "planned"
+    assert by_id[("voice", "inworld")].capabilities["timestamp_granularity"] == "word"
     selected = sorted((row.kind, row.id) for row in rows if row.selected)
     assert selected == [("image", "mock"), ("voice", "mock")]
 

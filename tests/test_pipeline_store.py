@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
@@ -15,6 +16,7 @@ from cashcow_studio.models.project import Project, ProjectSource, StageName
 from cashcow_studio.storage import db
 from cashcow_studio.storage.project_store import (
     STAGE_DIRS,
+    ProjectFolderBusy,
     ProjectNotFound,
     ProjectStore,
     topic_slug,
@@ -152,6 +154,27 @@ def test_a_folder_moved_by_hand_is_found_and_relabelled(
     found = store.get(project.id)
     assert found.folder == str(new)
     assert [row.id for row in store.list()] == [project.id]
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="only Windows refuses to move an open file")
+def test_archive_refuses_while_a_file_in_the_folder_is_open(
+    store: ProjectStore, app_env: AppEnv
+) -> None:
+    """A render still writing into the folder: the move is refused whole, nothing is
+    half-copied or half-deleted, and the project is still listed."""
+    project = new_project(store)
+    folder = Path(project.folder)
+    (folder / "07_edit").mkdir(exist_ok=True)
+    with (folder / "07_edit" / "proxy.mp4").open("wb") as handle:
+        handle.write(b"x")
+        with pytest.raises(ProjectFolderBusy, match="still in use"):
+            store.archive(project.id)
+    assert (folder / "job.json").is_file() and (folder / "07_edit" / "proxy.mp4").is_file()
+    assert not (app_env.projects_dir / "_archived" / folder.name).exists()
+    assert [row.id for row in store.list()] == [project.id]
+    # Once the file is closed the archive goes through as usual.
+    assert store.archive(project.id) == app_env.projects_dir / "_archived" / folder.name
+    assert not folder.exists()
 
 
 def test_archive_moves_the_folder_and_never_deletes(

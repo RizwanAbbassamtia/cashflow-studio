@@ -16,6 +16,8 @@ EXPECTED_IDS = [
     "python_version",
     "ffmpeg",
     "ffprobe",
+    "ffmpeg_filters",
+    "fonts",
     "deno",
     "yt_dlp",
     "webview2",
@@ -49,6 +51,8 @@ def test_every_check_returns_a_result_without_tools(no_tools: None) -> None:
     assert by_id["ffmpeg"].status == "fail"
     assert by_id["ffmpeg"].fix_hint
     assert by_id["ffprobe"].status == "fail"
+    assert by_id["ffmpeg_filters"].status == "fail"  # no ffmpeg, so no filters to check
+    assert by_id["fonts"].status == "ok"  # the vendored Noto fonts need no tool
     assert by_id["deno"].status == "warn"
     assert by_id["anthropic_key"].status == "warn"
     assert by_id["voice_key"].status == "warn"

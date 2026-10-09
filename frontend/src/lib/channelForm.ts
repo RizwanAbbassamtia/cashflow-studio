@@ -127,6 +127,24 @@ export const frameworkSchema = z.object({
   notes: freeText,
 });
 
+/** Form state keeps the consent date as text ("" = none); the API gets null for "". */
+export const voiceConsentSchema = z
+  .object({
+    owner_name: freeText,
+    consented_by: freeText,
+    consented_at: freeText,
+    statement: freeText,
+  })
+  .superRefine((consent, ctx) => {
+    if (!consent.owner_name.trim()) return;
+    if (!consent.consented_by.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["consented_by"], message: "Say who recorded the consent" });
+    }
+    if (!consent.consented_at.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["consented_at"], message: "Enter the date the owner agreed" });
+    }
+  });
+
 export const voiceSchema = z.object({
   tool: z.enum(VOICE_TOOLS),
   clone_ref: freeText,
@@ -142,6 +160,7 @@ export const voiceSchema = z.object({
   returns_word_timestamps: z.boolean().nullable(),
   api_key_env: apiKeyEnv,
   monthly_budget_characters: optionalWholeNumber,
+  consent: voiceConsentSchema,
 });
 
 export const imagesSchema = z.object({
@@ -208,7 +227,14 @@ export function channelToForm(channel: Channel): ChannelFormValues {
     channel: { ...channel.channel, url: channel.channel.url ?? "" },
     competitors: channel.competitors.map((c) => ({ ...c })),
     frameworks: channel.frameworks.map((f) => ({ ...f })),
-    voice: { ...channel.voice },
+    voice: {
+      ...channel.voice,
+      consent: {
+        ...channel.voice.consent,
+        // <input type="datetime-local"> wants "YYYY-MM-DDTHH:MM"; the API sends ISO 8601.
+        consented_at: (channel.voice.consent.consented_at ?? "").slice(0, 16),
+      },
+    },
     images: { ...channel.images },
     thumbnail: {
       ...channel.thumbnail,
@@ -222,12 +248,17 @@ export function channelToForm(channel: Channel): ChannelFormValues {
 /** Body for POST/PUT. An empty slug is left out so the server derives it from the name. */
 export function formToChannel(values: ChannelFormValues): ChannelCreate {
   const { slug, ...rest } = values;
+  const consentDate = values.voice.consent.consented_at.trim();
   const body: ChannelCreate = {
     ...rest,
     channel: {
       ...values.channel,
       url: values.channel.url === "" ? null : values.channel.url,
       brand_colors: values.channel.brand_colors.map((c) => c.toUpperCase()),
+    },
+    voice: {
+      ...values.voice,
+      consent: { ...values.voice.consent, consented_at: consentDate === "" ? null : consentDate },
     },
   };
   if (slug) body.slug = slug;

@@ -4,6 +4,8 @@
  * read-only provider status list). Raw key values never reach the browser.
  */
 
+import { isRenderPreset, type RenderPreset } from "./timeline";
+
 export interface KeyStatus {
   set: boolean;
   /** first 3 + "..." + last 4 characters, or "" when the key is not set */
@@ -111,6 +113,55 @@ export interface VoiceSettings {
   speaking_rate_wpm: number;
 }
 
+// ---- Render and captions (M4, additive; docs/M3-M4-CONTRACT.md section 5) -------------
+
+/** libx264 speed presets, fastest first. Slower means a smaller file at the same quality. */
+export const X264_PRESETS = ["ultrafast", "superfast", "veryfast", "faster", "fast", "medium", "slow", "slower", "veryslow"] as const;
+export type X264Preset = (typeof X264_PRESETS)[number];
+
+export const X264_PRESET_LABELS: Record<X264Preset, string> = {
+  ultrafast: "Ultra fast (largest file)",
+  superfast: "Super fast",
+  veryfast: "Very fast",
+  faster: "Faster",
+  fast: "Fast",
+  medium: "Medium (recommended)",
+  slow: "Slow (smaller file)",
+  slower: "Slower",
+  veryslow: "Very slow (smallest file)",
+};
+
+/** The caption looks the renderer knows; the backend may add more. */
+export const CAPTION_STYLES = ["bold-white"] as const;
+export type CaptionStyleName = (typeof CAPTION_STYLES)[number];
+
+export const CAPTION_STYLE_LABELS: Record<CaptionStyleName, string> = {
+  "bold-white": "Bold white with a dark outline",
+};
+
+export interface RenderSettings {
+  /** presets rendered for every video unless the Edit panel chooses others */
+  default_presets: RenderPreset[];
+  x264_preset: X264Preset;
+  /** show 4K (2160p) as a choice; it is slow on this computer */
+  enable_4k: boolean;
+}
+
+export interface CaptionsSettings {
+  /** burn captions into the video by default */
+  enabled: boolean;
+  /** a style name from config/captions.yaml */
+  style: string;
+}
+
+export function defaultRenderSettings(): RenderSettings {
+  return { default_presets: ["1080p"], x264_preset: "medium", enable_4k: false };
+}
+
+export function defaultCaptionsSettings(): CaptionsSettings {
+  return { enabled: true, style: "bold-white" };
+}
+
 export const PROVIDER_KINDS = ["llm", "research", "image", "voice"] as const;
 export type ProviderKind = (typeof PROVIDER_KINDS)[number];
 
@@ -155,6 +206,9 @@ export interface Settings {
   pipeline?: Partial<PipelineSettings> | null;
   voice?: Partial<VoiceSettings> | null;
   providers?: ProviderStatus[] | null;
+  /** M4 additions (render and captions); missing on an older backend */
+  render?: Partial<RenderSettings> | null;
+  captions?: Partial<CaptionsSettings> | null;
 }
 
 /**
@@ -171,6 +225,8 @@ export interface SettingsUpdate {
   research?: ResearchSettings;
   pipeline?: PipelineSettings;
   voice?: VoiceSettings;
+  render?: RenderSettings;
+  captions?: CaptionsSettings;
 }
 
 /** The nested settings with every gap filled from the defaults, plus what the backend sent. */
@@ -274,3 +330,35 @@ export const KEY_PURPOSE: Record<string, string> = {
   AZURE_SPEECH_KEY: "Microsoft Azure: voice",
   AZURE_SPEECH_REGION: "Microsoft Azure: region, for example westeurope",
 };
+
+// ---- Render and captions resolver (M4) -----------------------------------------------
+
+/** The `render` and `captions` settings with every gap filled from the defaults. */
+export interface RenderSettingsResolved {
+  render: RenderSettings;
+  captions: CaptionsSettings;
+  /** false when the backend answered without the `render` key (older app version) */
+  supported: boolean;
+}
+
+/** Fill the render and captions settings from the response, tolerating an older backend. */
+export function resolveRenderSettings(settings: Settings | undefined): RenderSettingsResolved {
+  const render = defaultRenderSettings();
+  const captions = defaultCaptionsSettings();
+  const supported = Boolean(settings && (settings.render || settings.captions));
+
+  if (settings?.render) {
+    if (Array.isArray(settings.render.default_presets)) {
+      const presets = settings.render.default_presets.filter(isRenderPreset);
+      render.default_presets = presets.length > 0 ? presets : render.default_presets;
+    }
+    const x264 = settings.render.x264_preset;
+    if (typeof x264 === "string" && (X264_PRESETS as readonly string[]).includes(x264)) render.x264_preset = x264 as X264Preset;
+    if (typeof settings.render.enable_4k === "boolean") render.enable_4k = settings.render.enable_4k;
+  }
+  if (settings?.captions) {
+    if (typeof settings.captions.enabled === "boolean") captions.enabled = settings.captions.enabled;
+    if (typeof settings.captions.style === "string" && settings.captions.style.trim()) captions.style = settings.captions.style.trim();
+  }
+  return { render, captions, supported };
+}

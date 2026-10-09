@@ -1,5 +1,7 @@
 // Project file access shared by the voice, images, edit and export review panels.
 // Contract: docs/M3-M4-CONTRACT.md section 5. Keep these names; both front-end agents import them.
+import { useMutation } from "@tanstack/react-query";
+
 import { api } from "./client";
 
 /** URL of a file inside the project folder, for <audio>, <video> and <img> elements. */
@@ -27,4 +29,20 @@ export async function uploadProjectFile(
   form.append("file", file, file.name);
   if (scene !== undefined) form.append("scene", String(scene));
   return api.upload<UploadResult>(`/api/projects/${encodeURIComponent(projectId)}/upload/${stage}`, form);
+}
+
+export type UploadStage = Parameters<typeof uploadProjectFile>[1];
+
+export interface UploadProjectFileInput {
+  projectId: string;
+  stage: UploadStage;
+  file: File;
+  scene?: number;
+}
+
+/** Mutation form of `uploadProjectFile` for buttons that show a spinner while the file goes up. */
+export function useUploadProjectFile() {
+  return useMutation({
+    mutationFn: ({ projectId, stage, file, scene }: UploadProjectFileInput) => uploadProjectFile(projectId, stage, file, scene),
+  });
 }

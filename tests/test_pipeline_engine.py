@@ -6,6 +6,8 @@ from __future__ import annotations
 
 import asyncio
 import json
+import threading
+import time
 from collections.abc import Callable, Coroutine
 from pathlib import Path
 from typing import Any
@@ -321,6 +323,130 @@ def test_own_topic_skips_research_and_titles_the_project(
 
 
 # Redo / skip / failure / resume ----------------------------------------------------------
+
+
+class ThreadStage(FakeStage):
+    """Keeps a file in its stage folder open in a worker thread until the cancel flag is
+    set, the way a render or a loudness scan does; archive must wait for it."""
+
+    def __init__(self, name: str) -> None:
+        super().__init__(name)
+        self.started = threading.Event()
+        self.finished = threading.Event()
+        self.saw_cancel = False
+
+    async def run(self, ctx: StageContext) -> StageResult:
+        from cashcow_studio.pipeline.stages.base import run_in_thread
+
+        def work() -> None:
+            path = ctx.stage_dir(self.name) / "render.part"
+            with path.open("wb") as handle:
+                handle.write(b"x")
+                self.started.set()
+                self.saw_cancel = ctx.cancel.wait(10.0)
+                time.sleep(0.2)  # still writing after the cancel: the move has to wait
+                handle.write(b"y")
+            self.finished.set()
+
+        await run_in_thread(ctx, work)
+        raise StageError("stopped")
+
+
+def test_archive_waits_for_the_stage_thread_before_moving_the_folder(
+    settings: Settings, channel: Channel
+) -> None:
+    stage = ThreadStage("research")
+
+    async def main() -> None:
+        engine = make_engine(settings, stage)
+        project = create(engine, channel, **ALL_AUTO)
+        await engine.run(project.id)
+        await asyncio.to_thread(stage.started.wait, 10.0)
+        assert stage.started.is_set()
+        folder = Path(project.folder)
+        destination = await engine.archive(project.id)
+        assert stage.saw_cancel and stage.finished.is_set()
+        assert not folder.exists()
+        assert (destination / "01_research" / "render.part").read_bytes() == b"xy"
+        assert engine.list() == []
+
+    run_async(main)
+
+
+class ExportingFakeStage(EditableFakeStage):
+    """Like the export stage: ``on_approve`` copies the files once a person approved."""
+
+    def __init__(self, name: str) -> None:
+        super().__init__(name)
+        self.approvals: list[dict[str, Any]] = []
+
+    async def on_approve(self, ctx: StageContext) -> StageResult | None:
+        self.approvals.append(dict(ctx.edits))
+        out = ctx.stage_dir(self.name) / "exported.txt"
+        out.write_text("copied")
+        return StageResult(
+            outputs=[out], summary="Exported to the folder",
+            needs_review_payload={"exported": True},
+        )
+
+
+def test_on_approve_hook_runs_on_every_approval(settings: Settings, channel: Channel) -> None:
+    title = ExportingFakeStage("title")
+
+    async def main() -> None:
+        engine = make_engine(settings, FakeStage("research"), title)
+        project = create(engine, channel, **(ALL_AUTO | {"title": "review"}))
+        await engine.run(project.id)
+        await settle(engine, project.id)
+        assert engine.stage_payload(project.id, StageName.title) == {"stage": "title",
+                                                                     "attempt": 1}
+        assert title.approvals == []
+        approved = await engine.approve(
+            project.id, StageName.title, by="Imran", edits={"title_text": "Chosen"}
+        )
+        assert title.edits_seen == [{"title_text": "Chosen"}]
+        assert title.approvals == [{"title_text": "Chosen"}]
+        assert approved.stages[StageName.title].summary == "Exported to the folder"
+        assert engine.stage_payload(project.id, StageName.title) == {"exported": True}
+        assert (Path(approved.folder) / "02_title" / "exported.txt").is_file()
+        history = " ".join(approved.stages[StageName.title].history)
+        assert "On approval by Imran: Exported to the folder" in history
+        await settle(engine, project.id)
+        assert statuses(engine.get(project.id))["title"] == "done"
+        # An approval without edits still exports.
+        plain = ExportingFakeStage("title")
+        engine2 = make_engine(settings, FakeStage("research"), plain)
+        second = create(engine2, channel, **(ALL_AUTO | {"title": "review"}))
+        await engine2.run(second.id)
+        await settle(engine2, second.id)
+        await engine2.approve(second.id, StageName.title, by="Imran")
+        assert plain.approvals == [{}] and plain.edits_seen == []
+
+    run_async(main)
+
+
+def test_redo_forgets_the_old_payload_while_the_stage_runs_again(
+    settings: Settings, channel: Channel
+) -> None:
+    async def main() -> None:
+        gate = asyncio.Event()
+        research = FakeStage("research", gate=gate)
+        engine = make_engine(settings, research)
+        project = create(engine, channel, **(ALL_AUTO | {"research": "review"}))
+        gate.set()
+        await engine.run(project.id)
+        await settle(engine, project.id)
+        assert engine.stage_payload(project.id, StageName.research)["attempt"] == 1
+        gate.clear()
+        await engine.redo(project.id, StageName.research, by="Imran", notes="again")
+        await asyncio.sleep(0)
+        # The old grid is gone while the stage runs again (a failed re-run never shows it).
+        assert engine.stage_payload(project.id, StageName.research) == {}
+        gate.set()
+        await settle(engine, project.id)
+        assert engine.stage_payload(project.id, StageName.research)["attempt"] == 2
+
+    run_async(main)
 
 
 def test_redo_reruns_with_notes_and_resets_later_stages(

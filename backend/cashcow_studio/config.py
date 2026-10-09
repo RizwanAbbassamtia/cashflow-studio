@@ -30,8 +30,9 @@ log = logging.getLogger(__name__)
 SETTINGS_FILE = "settings.json"
 ENV_FILE = ".env"
 PATH_KEYS = ("shared_dir", "projects_dir", "exports_dir")
-NESTED_KEYS = ("llm", "research", "pipeline", "voice")
-"""The nested objects of settings.json from docs/M1-M2-CONTRACT.md section 11."""
+NESTED_KEYS = ("llm", "research", "pipeline", "voice", "render", "captions")
+"""The nested objects of settings.json from docs/M1-M2-CONTRACT.md section 11 and
+docs/M3-M4-CONTRACT.md section 5 (``render`` and ``captions``)."""
 HOST = "127.0.0.1"
 
 ResearchProviderName = Literal["yt-dlp", "mock"]
@@ -62,11 +63,47 @@ class VoiceSettings(BaseModel):
     """Words per minute for every language; ``None`` means the table in config/voice.yaml."""
 
 
+RenderPresetName = Literal["720p", "1080p", "2160p"]
+X264Preset = Literal[
+    "ultrafast", "superfast", "veryfast", "faster", "fast", "medium", "slow", "slower", "veryslow"
+]
+
+
+class RenderSettings(BaseModel):
+    """Settings > Render (docs/M3-M4-CONTRACT.md section 5)."""
+
+    default_presets: list[RenderPresetName] = ["1080p"]
+    """Which final files a new project renders; the edit review can add more."""
+    x264_preset: X264Preset = "medium"
+    """Encoder speed for the final files (the proxy always uses ultrafast)."""
+    enable_4k: bool = False
+    """Allow 2160p renders (slow on a laptop; off unless a channel needs it)."""
+
+    @field_validator("default_presets")
+    @classmethod
+    def _unique_presets(cls, value: list[str]) -> list[str]:
+        seen: list[str] = []
+        for preset in value:
+            if preset not in seen:
+                seen.append(preset)
+        return seen or ["1080p"]
+
+
+class CaptionsSettings(BaseModel):
+    """Settings > Render > Captions."""
+
+    enabled: bool = True
+    style: str = Field(default="bold-white", min_length=1, max_length=40)
+    """A named look from config/captions.yaml (bold-white, yellow, clean)."""
+
+
 NESTED_MODELS: dict[str, type[BaseModel]] = {
     "llm": LlmSettings,
     "research": ResearchSettings,
     "pipeline": PipelineSettings,
     "voice": VoiceSettings,
+    "render": RenderSettings,
+    "captions": CaptionsSettings,
 }
 
 
@@ -133,6 +170,8 @@ class Settings(BaseSettings):
     research: ResearchSettings = ResearchSettings()
     pipeline: PipelineSettings = PipelineSettings()
     voice: VoiceSettings = VoiceSettings()
+    render: RenderSettings = RenderSettings()
+    captions: CaptionsSettings = CaptionsSettings()
 
     @field_validator("app_data_dir", mode="before")
     @classmethod
@@ -208,7 +247,8 @@ class Settings(BaseSettings):
         }
 
     def nested_as_dict(self) -> dict[str, dict[str, Any]]:
-        """The ``llm``, ``research``, ``pipeline`` and ``voice`` objects of settings.json."""
+        """The ``llm``, ``research``, ``pipeline``, ``voice``, ``render`` and ``captions``
+        objects of settings.json."""
         return {key: getattr(self, key).model_dump(mode="json") for key in NESTED_KEYS}
 
     def ensure_dirs(self) -> list[str]:

@@ -126,7 +126,20 @@ export function DashboardPage() {
           tone={awaitingReview.length > 0 ? "warn" : "muted"}
           hint={awaitingReview.length > 0 ? "Open the Review queue" : "Nothing waits for you"}
         />
-        <StatCard label="Exports" icon={PackageCheck} to="/projects" value={projects.isPending ? "..." : finished.length} tone="muted" hint="Rendering and export arrive in M4" />
+        <StatCard
+          label="Exports"
+          icon={PackageCheck}
+          to="/projects"
+          value={projects.isPending ? "..." : projects.isError ? "-" : finished.length}
+          tone={finished.length > 0 ? "ok" : "muted"}
+          hint={
+            projects.isSuccess
+              ? finished.length > 0
+                ? `${plural(finished.length, "finished video")} in your exports folder`
+                : "Finished videos land in your exports folder"
+              : "Open the project list"
+          }
+        />
         <StatCard
           label="Health checks"
           icon={Activity}

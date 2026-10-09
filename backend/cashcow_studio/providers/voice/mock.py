@@ -1,9 +1,12 @@
 """Mock voice: silent audio of the right length plus evenly spaced word timings.
 
 ``CCS_VOICE_PROVIDER=mock`` (the default) selects it, so tests and demos run offline and
-never bill anything. The WAV is 48 kHz mono 16-bit silence; its duration comes from the word
-count and the speaking rate, the same arithmetic the storyboard stage uses for scene
-lengths, so the mock timings line up with the estimated scenes.
+never bill anything. The WAV is 48 kHz mono 16-bit silence; its duration is
+``len(words) / wpm`` minutes (docs/M3-M4-CONTRACT.md section 1), the same arithmetic the
+storyboard stage uses for scene lengths, so the mock timings line up with the estimated
+scenes. The word rows carry ``source="estimated"`` so ``timing.json`` says
+``provider_sentence`` (exact sentence boundaries, estimated words) rather than claiming
+measured word times.
 """
 
 from __future__ import annotations

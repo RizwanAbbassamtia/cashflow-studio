@@ -5,7 +5,7 @@ import { KNOWN_KEY_NAMES, LANGUAGES, VOICE_TOOLS, type VoiceTool } from "../../.
 import { NumberField } from "../../form/NumberField";
 import { TriStateSelect } from "../../form/TriStateSelect";
 import { Field, FieldGrid, FormSection } from "../../ui/Field";
-import { Input, Select } from "../../ui/Input";
+import { Input, Select, Textarea } from "../../ui/Input";
 
 const VOICE_TOOL_LABELS: Record<VoiceTool, string> = {
   minimax: "MiniMax",
@@ -96,6 +96,26 @@ export function VoiceTab({ form }: { form: UseFormReturn<ChannelFormValues> }) {
                 <TriStateSelect id="voice.returns_word_timestamps" value={field.value} onChange={field.onChange} onBlur={field.onBlur} />
               )}
             />
+          </Field>
+        </FieldGrid>
+      </FormSection>
+
+      <FormSection
+        title="Consent for a cloned voice"
+        description="Only the team's own voices may be cloned. When the channel uses a clone (a clone link or voice id above, or a voice sample), record who agreed and when; the voice step stops until this is filled in or a consent.json sits next to the sample. Leave it empty for a stock voice."
+      >
+        <FieldGrid>
+          <Field label="Voice owner" htmlFor="voice.consent.owner_name" error={e?.consent?.owner_name?.message} hint="Whose voice it is.">
+            <Input id="voice.consent.owner_name" placeholder="Daniel Example" {...register("voice.consent.owner_name")} />
+          </Field>
+          <Field label="Recorded by" htmlFor="voice.consent.consented_by" error={e?.consent?.consented_by?.message} hint="Who on the team took the consent.">
+            <Input id="voice.consent.consented_by" placeholder="Imran" {...register("voice.consent.consented_by")} />
+          </Field>
+          <Field label="Agreed on" htmlFor="voice.consent.consented_at" error={e?.consent?.consented_at?.message} hint="The date and time the owner agreed.">
+            <Input id="voice.consent.consented_at" type="datetime-local" invalid={Boolean(e?.consent?.consented_at)} {...register("voice.consent.consented_at")} />
+          </Field>
+          <Field label="What they agreed to" htmlFor="voice.consent.statement" className="md:col-span-2" hint="Optional. The sentence the owner agreed to, for the record.">
+            <Textarea id="voice.consent.statement" rows={2} placeholder="I agree that my voice may be cloned for the Kind Ledger channel." {...register("voice.consent.statement")} />
           </Field>
         </FieldGrid>
       </FormSection>

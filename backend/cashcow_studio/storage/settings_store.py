@@ -25,8 +25,9 @@ log = logging.getLogger(__name__)
 
 KEY_NAME_RE = re.compile(r"^[A-Z][A-Z0-9_]*$")
 PATH_KEYS = ("shared_dir", "projects_dir", "exports_dir")
-SECTION_KEYS = ("llm", "research", "pipeline", "voice")
-"""Nested objects in settings.json (Settings > Models and providers); see config.py."""
+SECTION_KEYS = ("llm", "research", "pipeline", "voice", "render", "captions")
+"""Nested objects in settings.json (Settings > Models and providers, Settings > Render);
+see config.py."""
 
 # Real keys are a few hundred characters at most. Windows refuses an environment entry over
 # 32767 characters, and a saved value that long would stop the app from starting.

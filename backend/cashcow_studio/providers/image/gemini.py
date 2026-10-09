@@ -1,19 +1,22 @@
 """Google Gemini image adapter (the "Nano Banana" models) on the official ``google-genai`` SDK.
 
-Skeleton for M3: the request shape, the response handling and the error messages are in
-place; it is not exercised by the tests and has not yet produced an image in this app.
-
 How it works
 ------------
 * The client is built on first use from the key named in ``config/providers.yaml``
   (``image.gemini.key_env``, default ``GEMINI_API_KEY``). Nothing touches the SDK at import
   time, so this module imports cleanly without a key or network.
+* The model id comes from, in order: the request (``ImageRequest.model``, set by the images
+  stage from the channel's ``images.model``), ``config/images.yaml`` (``models.gemini``), then
+  ``config/providers.yaml`` (``image.gemini.default_model``).
 * ``generate`` sends the reference images (style sheet, earlier scenes) as inline parts
   followed by the prompt, asks for an ``IMAGE`` response with the aspect ratio and the size
   label (``1K``/``2K``/``4K``), saves the first image part as PNG and records the provenance
-  flags from the catalogue (Google states every Gemini image carries a SynthID watermark;
-  C2PA is not asserted). Gemini has no negative-prompt field, so ``negative_prompt`` is folded
-  into the prompt as a "Do not include" line.
+  flags: SynthID from the catalogue (Google states every Gemini image carries the watermark;
+  the SDK does not report it per image) and C2PA by looking for a manifest (``caBX`` chunk /
+  JUMBF box) in the returned bytes. Gemini has no negative-prompt field, so
+  ``negative_prompt`` is folded into the prompt as a "Do not include" line.
+* A rate limit (429) or a server error (5xx) is retried once after a short pause; every
+  other error becomes one plain sentence without the key in it.
 
 Verifying the model id and prices (they change every few months)
 ----------------------------------------------------------------
@@ -21,22 +24,24 @@ Do this before shipping and whenever Google answers "model not found" (HTTP 404)
 
 1. Open https://ai.google.dev/gemini-api/docs/models and
    https://ai.google.dev/gemini-api/docs/image-generation. Confirm that
-   ``image.gemini.default_model`` in ``config/providers.yaml`` is listed as an image model,
-   that it still accepts ``image_config.aspect_ratio`` (16:9 and 9:16) and
-   ``image_config.image_size`` (1K/2K/4K), and note the reference-image limit.
-2. Open https://ai.google.dev/gemini-api/docs/pricing and update ``price_by_size_usd``.
+   ``models.gemini`` in ``config/images.yaml`` is listed as an image model, that it still
+   accepts ``image_config.aspect_ratio`` (16:9 and 9:16) and ``image_config.image_size``
+   (1K/2K/4K), and note the reference-image limit.
+2. Open https://ai.google.dev/gemini-api/docs/pricing and update ``price_by_size_usd`` in
+   ``config/providers.yaml``.
 3. Open https://ai.google.dev/gemini-api/docs/deprecations and check for a shutdown date;
-   if one is set, switch ``default_model`` to the successor named there.
+   if one is set, switch the model id to the successor named there.
 4. Confirm the SDK call shape against https://googleapis.github.io/python-genai/ : this
    file uses ``client.models.generate_content(model=..., contents=[parts..., prompt],
-   config=GenerateContentConfig(response_modalities=["IMAGE"], image_config=ImageConfig(
-   aspect_ratio=..., image_size=...)))`` and reads ``candidates[0].content.parts[*]
-   .inline_data``. Written against google-genai 2.29.0.
+   config=GenerateContentConfig(response_modalities=["IMAGE"], seed=..., image_config=
+   ImageConfig(aspect_ratio=..., image_size=...)))`` and reads
+   ``candidates[0].content.parts[*].inline_data``. Written against google-genai 2.29.0.
 5. With a key saved in Settings > API keys, run one smoke image (prints the result, never
    the key)::
 
        .venv/Scripts/python.exe -m cashcow_studio.providers.image.gemini --out smoke.png
 
+   or run the live test: ``pytest -m live tests/test_images_providers.py``.
 6. Set ``verified_on`` in ``config/providers.yaml`` to today's date.
 
 Last verified: 2026-10-09 from Google's docs (see docs/research/2026-10-09-research-dump.md):
@@ -50,6 +55,7 @@ import io
 import logging
 import os
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -76,6 +82,9 @@ GEMINI_ID = "gemini"
 GEMINI_KEY_ENV = "GEMINI_API_KEY"
 DEFAULT_MODEL = "gemini-nano-banana-2.1"
 MAX_TEXT_IN_ERROR = 300
+RETRY_CODES = (429, 500, 502, 503, 504)
+RETRY_PAUSE_S = 4.0
+C2PA_MARKERS = (b"caBX", b"c2pa", b"jumb")
 
 
 def default_capabilities() -> ImageCapabilities:
@@ -99,6 +108,17 @@ def default_capabilities() -> ImageCapabilities:
     )
 
 
+def configured_model() -> str:
+    """``models.gemini`` from ``config/images.yaml``, or ``""`` when not set."""
+    try:
+        from ...images.config import images_config
+
+        return images_config().model_for(GEMINI_ID)
+    except Exception:  # noqa: BLE001 - a broken images.yaml must not stop the provider
+        log.warning("config/images.yaml could not be read; using the catalogue model id.")
+        return ""
+
+
 def explain_api_error(exc: BaseException, model: str, key_env: str, secret: str | None) -> str:
     """Turn an SDK error into one plain sentence for the reviewer. Never includes the key."""
     code = getattr(exc, "code", None)
@@ -112,7 +132,7 @@ def explain_api_error(exc: BaseException, model: str, key_env: str, secret: str 
     if code == 404:
         return (
             f"Google does not know the image model {model!r} (HTTP 404). The model id in "
-            "config/providers.yaml may be out of date; follow the verification steps in "
+            "config/images.yaml may be out of date; follow the verification steps in "
             "providers/image/gemini.py."
         )
     if code == 429:
@@ -133,7 +153,10 @@ class GeminiImageProvider:
         self, capabilities: ImageCapabilities | None = None, model: str | None = None
     ) -> None:
         self.capabilities = capabilities or default_capabilities()
-        self.model = model or self.capabilities.default_model or DEFAULT_MODEL
+        self.model = (
+            model or configured_model() or self.capabilities.default_model or DEFAULT_MODEL
+        )
+        self.retry_pause_s = RETRY_PAUSE_S
         self._client: Any = None
         self._client_secret: str | None = None
 
@@ -180,6 +203,7 @@ class GeminiImageProvider:
         from google.genai import errors as genai_errors
         from google.genai import types
 
+        model = request.model.strip() or self.model
         prompt = compose_prompt(request)
         contents: list[Any] = self._reference_parts(request.reference_images, types)
         contents.append(prompt)
@@ -191,32 +215,47 @@ class GeminiImageProvider:
             seed=request.seed,
         )
         secret = self._secret()
-        try:
-            response = client.models.generate_content(
-                model=self.model, contents=contents, config=config
-            )
-        except genai_errors.APIError as exc:
-            raise ProviderError(explain_api_error(exc, self.model, self.key_env, secret)) from exc
-        except Exception as exc:  # network trouble, SDK surprises: keep the message clean
-            detail = scrub_secret(str(exc), secret)[:MAX_TEXT_IN_ERROR]
-            raise ProviderError(f"Google could not be reached: {detail}") from exc
+        response = self._call(client, genai_errors, model, contents, config, secret)
 
         data, mime = first_image_part(response)
         path = Path(request.output_path)
         width, height = save_png(data, mime, path)
-        model_used = getattr(response, "model_version", None) or self.model
+        model_used = getattr(response, "model_version", None) or model
+        provenance = self.capabilities.provenance.model_copy()
+        provenance.c2pa = detect_c2pa(data)
         return ImageResult(
             path=path,
             width=width,
             height=height,
             model=str(model_used),
             seed=request.seed,
-            provenance=self.capabilities.provenance.model_copy(),
+            provenance=provenance,
             cost_usd=self.capabilities.price_for(request.size),
             provider=self.id,
             prompt_used=prompt,
             scene_id=request.scene_id,
         )
+
+    def _call(
+        self, client: Any, genai_errors: Any, model: str, contents: list[Any], config: Any,
+        secret: str,
+    ) -> Any:
+        """One ``generate_content`` call, retried once on a rate limit or a server error."""
+        for attempt in (1, 2):
+            try:
+                return client.models.generate_content(model=model, contents=contents, config=config)
+            except genai_errors.APIError as exc:
+                code = getattr(exc, "code", None)
+                if attempt == 1 and code in RETRY_CODES:
+                    log.warning("Google images: HTTP %s, retrying once in %.0f s", code,
+                                self.retry_pause_s)
+                    time.sleep(self.retry_pause_s)
+                    continue
+                raise ProviderError(explain_api_error(exc, model, self.key_env, secret)) from exc
+            except Exception as exc:  # network trouble, SDK surprises: keep the message clean
+                detail = scrub_secret(str(exc), secret)[:MAX_TEXT_IN_ERROR]
+                raise ProviderError(f"Google could not be reached: {detail}") from exc
+        raise ProviderError("Google could not be reached.")  # pragma: no cover - loop returns
 
     def _reference_parts(self, paths: list[Path], types: Any) -> list[Any]:
         limit = self.capabilities.max_reference_images
@@ -341,6 +380,12 @@ def first_image_part(response: Any) -> tuple[bytes, str]:
     raise ProviderError(
         f"Google returned no image{reason_text}. " + (note or "Try rewording the prompt.")
     )
+
+
+def detect_c2pa(data: bytes) -> bool:
+    """True when the file carries a C2PA manifest (a ``caBX`` PNG chunk or a JUMBF box)."""
+    head = data[:4_000_000]
+    return b"caBX" in head or (b"jumb" in head and b"c2pa" in head)
 
 
 def save_png(data: bytes, mime: str, path: Path) -> tuple[int, int]:

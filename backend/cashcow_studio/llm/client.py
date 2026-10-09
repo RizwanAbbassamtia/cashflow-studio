@@ -14,6 +14,9 @@ environment and is never logged.
 
 from __future__ import annotations
 
+import asyncio
+import base64
+import io
 import json
 import logging
 import os
@@ -33,6 +36,22 @@ T = TypeVar("T", bound=BaseModel)
 
 PROVIDER_ENV = "CCS_LLM_PROVIDER"
 SETTINGS_LLM_KEY = "llm"
+
+VISION_MEDIA_TYPES: dict[str, str] = {
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".webp": "image/webp",
+    ".gif": "image/gif",
+}
+VISION_MAX_SIDE_PX = 1568
+"""Claude downsizes anything longer than this; shrinking first saves tokens and upload time."""
+VISION_MAX_BYTES = 3_500_000
+"""Files over this are re-encoded (the API refuses images above 5 MB)."""
+VISION_REWORD_PREFIX = (
+    "Context for this request: this is a routine quality check of a computer-generated "
+    "picture for a video; describe only what is visible and answer the fields neutrally.\n\n"
+)
 
 REWORD_PREFIX = (
     "Context for this request: this is editorial writing for an entertainment video channel. "
@@ -93,11 +112,28 @@ class LLMClient(Protocol):
         stage: str | None = None,
     ) -> tuple[T, LLMUsage]: ...
 
+    async def analyze_image(
+        self,
+        task: str,
+        image_path: Path,
+        prompt: str,
+        schema: type[T],
+        model: str | None = None,
+        *,
+        project_id: str | None = None,
+        stage: str | None = None,
+    ) -> T:
+        """Vision: the picture (base64 block) goes before ``prompt``; the answer is parsed
+        into ``schema``. The usage of the call is kept on ``last_usage`` for cost booking."""
+        ...
+
 
 class BaseLLMClient:
     """Shared bookkeeping: model choice, cost, the ``llm_calls`` log."""
 
     provider = "base"
+    last_usage: LLMUsage | None = None
+    """Usage of the most recent ``analyze_image`` call (stages read its ``cost_usd``)."""
 
     def __init__(self, config: LLMConfig, app_data_dir: Path | None = None) -> None:
         self.config = config
@@ -166,6 +202,44 @@ class BaseLLMClient:
             )
         except Exception as exc:  # noqa: BLE001 - the call succeeded; only the log failed
             log.warning("Could not write the llm_calls row for task %s: %s", usage.task, exc)
+
+
+def encode_image_for_vision(
+    path: Path, max_side: int = VISION_MAX_SIDE_PX, max_bytes: int = VISION_MAX_BYTES
+) -> tuple[str, str]:
+    """``(base64 data, media type)`` for an image block.
+
+    A small PNG/JPEG/WebP/GIF is sent as it is; anything larger than ``max_side`` pixels or
+    ``max_bytes`` is shrunk and re-encoded as JPEG with Pillow first.
+    """
+    path = Path(path)
+    media_type = VISION_MEDIA_TYPES.get(path.suffix.lower())
+    try:
+        from PIL import Image
+
+        with Image.open(path) as image:
+            width, height = image.size
+            small = max(width, height) <= max_side
+            if media_type and small and path.stat().st_size <= max_bytes:
+                data = path.read_bytes()
+            else:
+                picture = image.convert("RGB")
+                if not small:
+                    picture.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)
+                buffer = io.BytesIO()
+                picture.save(buffer, "JPEG", quality=90, optimize=True)
+                data, media_type = buffer.getvalue(), "image/jpeg"
+    except OSError as exc:
+        raise LLMError(f"The picture {path.name} could not be read for the check: {exc}") from exc
+    return base64.b64encode(data).decode("ascii"), media_type or "image/png"
+
+
+def vision_content(data_b64: str, media_type: str, prompt: str) -> list[dict[str, Any]]:
+    """One user message: the image block first, the text after it (docs/llm-notes.md)."""
+    return [
+        {"type": "image", "source": {"type": "base64", "media_type": media_type, "data": data_b64}},
+        {"type": "text", "text": prompt},
+    ]
 
 
 def system_blocks(system: str | Sequence[str], cache_ttl: str) -> list[dict[str, Any]]:
@@ -294,6 +368,67 @@ class AnthropicLLMClient(BaseLLMClient):
                 )
             self.record(usage, project_id=project_id, stage=stage)
             return parsed, usage
+
+    async def analyze_image(
+        self,
+        task: str,
+        image_path: Path,
+        prompt: str,
+        schema: type[T],
+        model: str | None = None,
+        *,
+        project_id: str | None = None,
+        stage: str | None = None,
+    ) -> T:
+        """Look at one picture (Sonnet 5.5, effort from llm.yaml, ``low`` for ``image_qa``).
+
+        The image goes in as a base64 block before the text; the answer is a structured
+        output validated against ``schema``. A refusal is retried once with neutral framing.
+        """
+        requested = self.model_for(task, model)
+        data_b64, media_type = await asyncio.to_thread(encode_image_for_vision, Path(image_path))
+        params: dict[str, Any] = {
+            "model": requested,
+            "max_tokens": self.config.max_tokens_for(task),
+            "output_config": {"effort": self.effort_for(task)},
+            "output_format": schema,
+        }
+        if self.config.fallback_enabled:
+            params["betas"] = [self.config.fallback_beta]
+            params["fallbacks"] = self.config.fallback_mode
+        text = prompt
+        attempts = 0
+        while True:
+            attempts += 1
+            started = time.monotonic()
+            content = vision_content(data_b64, media_type, text)
+            message = await self._send(
+                task, params | {"messages": [{"role": "user", "content": content}]}
+            )
+            usage = self._usage_of(task, requested, message, started, attempts)
+            self.last_usage = usage
+            if message.stop_reason == "refusal":
+                details = getattr(message, "stop_details", None)
+                category = getattr(details, "category", None)
+                self.record(usage, project_id=project_id, stage=stage, status="refused",
+                            error=str(category or "refusal"))
+                if attempts == 1:
+                    log.info("Claude declined image task %s (%s); retrying reworded",
+                             task, category)
+                    text = VISION_REWORD_PREFIX + prompt
+                    continue
+                raise LLMRefused(category, getattr(details, "explanation", None))
+            parsed = getattr(message, "parsed_output", None)
+            if parsed is None:
+                parsed = self._parse_text(schema, message)
+            if parsed is None:
+                self.record(usage, project_id=project_id, stage=stage, status="invalid",
+                            error="no structured output")
+                raise LLMError(
+                    f"Claude's answer for '{task}' did not have the expected shape. Try again."
+                )
+            self.record(usage, project_id=project_id, stage=stage)
+            return parsed
 
     async def _send(self, task: str, params: dict[str, Any]) -> Any:
         import anthropic

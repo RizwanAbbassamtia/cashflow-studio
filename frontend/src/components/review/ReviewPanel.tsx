@@ -7,7 +7,7 @@ import type { StageName } from "../../types/channel";
 import type { Project } from "../../types/project";
 import { ProgressBar } from "../projects/ProgressBar";
 import { StageActions } from "../projects/StageActions";
-import { LATER_STAGES, STAGE_DESCRIPTIONS, STAGE_FILES, STAGE_FOLDERS, STAGE_LABELS } from "../projects/stageMeta";
+import { STAGE_DESCRIPTIONS, STAGE_FILES, STAGE_FOLDERS, STAGE_LABELS } from "../projects/stageMeta";
 import { StageStatusBadge } from "../projects/StageStatusBadge";
 import { useReviewerName } from "../projects/useReviewerName";
 import { Badge } from "../ui/Badge";
@@ -30,21 +30,27 @@ export interface ReviewPanelProps {
 }
 
 /** Stages whose panel carries its own approve and redo buttons while a review is open. */
-const STAGES_WITH_OWN_CONTROLS: readonly StageName[] = ["research", "title", "script", "storyboard"];
+const STAGES_WITH_OWN_CONTROLS: readonly StageName[] = [
+  "research",
+  "title",
+  "script",
+  "storyboard",
+  "voice",
+  "images",
+  "edit",
+  "export",
+];
 
 /** Shown while a stage waits for files from a person (mode "manual", or no runner yet). */
 function ManualWaitNotice({ project, stage }: { project: Project; stage: StageName }) {
-  const later = LATER_STAGES.includes(stage);
   const folder = `${project.folder}\\${STAGE_FOLDERS[stage]}`;
   const files = STAGE_FILES[stage];
   return (
     <div className="flex flex-col gap-2">
       <Notice tone="warn" title={`${STAGE_LABELS[stage]} waits for your files`}>
-        {later
-          ? `The automatic ${STAGE_LABELS[stage].toLowerCase()} stage arrives in a later update. `
-          : project.stage_modes[stage] === "manual"
-            ? "This stage is set to Manual, so the AI does not run it. "
-            : "The AI did not run this stage. "}
+        {project.stage_modes[stage] === "manual"
+          ? "This stage is set to Manual, so the AI does not run it. "
+          : "The AI did not run this stage. "}
         Put {files.length === 1 ? files[0] : `these files: ${files.join(", ")}`} into the folder below, then press
         &quot;Files are in place, continue&quot;. The pipeline is paused here until you do.
       </Notice>

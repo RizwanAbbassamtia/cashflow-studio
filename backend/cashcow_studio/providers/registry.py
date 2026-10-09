@@ -43,6 +43,9 @@ from .voice.base import (
     VoiceInfo,
     VoiceProvider,
 )
+from .voice.cartesia import CartesiaVoiceProvider
+from .voice.generic_http import GENERIC_HTTP_ID, GenericHttpVoiceProvider
+from .voice.minimax import MinimaxVoiceProvider
 from .voice.mock import MockVoiceProvider
 
 log = logging.getLogger(__name__)
@@ -55,7 +58,16 @@ ENV_VARS: dict[str, str] = {
 VOICE_ADAPTERS: dict[str, Callable[..., VoiceProvider]] = {
     MockVoiceProvider.id: MockVoiceProvider,
     Ai33VoiceProvider.id: Ai33VoiceProvider,
+    MinimaxVoiceProvider.id: MinimaxVoiceProvider,
+    CartesiaVoiceProvider.id: CartesiaVoiceProvider,
+    GENERIC_HTTP_ID: GenericHttpVoiceProvider,
 }
+
+
+def wired_by_config(capabilities: ProviderCapabilities | None) -> bool:
+    """True when the catalogue entry carries an ``http`` recipe with a URL: such a tool (the
+    ai33 stub once its API is known) runs through the generic HTTP adapter without code."""
+    return bool(capabilities and str((capabilities.http or {}).get("url") or "").strip())
 IMAGE_ADAPTERS: dict[str, Callable[..., ImageProvider]] = {
     MockImageProvider.id: MockImageProvider,
     GeminiImageProvider.id: GeminiImageProvider,
@@ -188,6 +200,8 @@ def build_voice_provider(
     chosen = provider_choice("voice", settings, name)
     capabilities = catalog.voice_capabilities(chosen)
     factory = VOICE_ADAPTERS.get(chosen)
+    if wired_by_config(capabilities) and chosen != MockVoiceProvider.id:
+        factory = GenericHttpVoiceProvider
     if factory is None:
         if capabilities is None:
             reason = _unknown_reason("voice", chosen, catalog)

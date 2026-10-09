@@ -9,12 +9,13 @@ project list never freezes the WebSocket stream or the other requests.
 from __future__ import annotations
 
 import asyncio
+import json
 import subprocess
 import sys
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel
 
 from ..models.channel import StageMode
@@ -27,7 +28,7 @@ from ..pipeline.engine import (
     ProjectBusy,
 )
 from ..storage.channel_store import ChannelNotFound, ChannelStoreError, InvalidSlug
-from ..storage.project_store import ProjectNotFound, ProjectStoreError
+from ..storage.project_store import ProjectFolderBusy, ProjectNotFound, ProjectStoreError
 from .deps import ChannelStoreDep
 
 router = APIRouter(prefix="/api", tags=["projects"])
@@ -66,6 +67,15 @@ class RunResponse(BaseModel):
     message: str
 
 
+class OpenFolderRequest(BaseModel):
+    """Body of ``open-folder``: the project folder (default) or the export folder the export
+    step wrote the finished files to (``target: "export"``). ``folder`` is only a hint from
+    the screen; the folder that is opened always comes from the project's own files."""
+
+    target: Literal["project", "export"] = "project"
+    folder: str | None = None
+
+
 class OpenFolderResponse(BaseModel):
     ok: bool
     folder: str
@@ -74,7 +84,7 @@ class OpenFolderResponse(BaseModel):
 def _translate(exc: Exception) -> HTTPException:
     if isinstance(exc, ProjectNotFound):
         return HTTPException(status_code=404, detail=str(exc))
-    if isinstance(exc, ProjectBusy | InvalidTransition):
+    if isinstance(exc, ProjectBusy | InvalidTransition | ProjectFolderBusy):
         return HTTPException(status_code=409, detail=str(exc))
     if isinstance(exc, InvalidProjectRequest):
         return HTTPException(status_code=422, detail=str(exc))
@@ -205,8 +215,26 @@ async def run_project(project_id: str, engine: EngineDep) -> RunResponse:
     )
 
 
+def export_folder_of(project: Project) -> Path | None:
+    """The folder the export step copied the finished files to (``08_export/export.json``),
+    or the ``08_export`` stage folder itself when nothing was exported yet."""
+    stage_dir = Path(project.folder) / "08_export"
+    try:
+        data = json.loads((stage_dir / "export.json").read_text(encoding="utf-8"))
+        recorded = Path(str(data.get("export_folder") or "")) if isinstance(data, dict) else None
+    except (OSError, ValueError):
+        recorded = None
+    if recorded is not None and str(recorded) and recorded.is_dir():
+        return recorded
+    return stage_dir if stage_dir.is_dir() else None
+
+
 @router.post("/projects/{project_id}/open-folder", response_model=OpenFolderResponse)
-async def open_project_folder(project_id: str, engine: EngineDep) -> OpenFolderResponse:
+async def open_project_folder(
+    project_id: str,
+    engine: EngineDep,
+    body: Annotated[OpenFolderRequest | None, Body()] = None,
+) -> OpenFolderResponse:
     try:
         project = await asyncio.to_thread(engine.get, project_id)
     except (ProjectStoreError, OSError) as exc:
@@ -216,6 +244,15 @@ async def open_project_folder(project_id: str, engine: EngineDep) -> OpenFolderR
         raise HTTPException(
             status_code=404, detail=f"The project folder {folder} is missing on this PC."
         )
+    if body is not None and body.target == "export":
+        exported = export_folder_of(project)
+        if exported is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Nothing has been exported for this project yet, so there is no export "
+                "folder to open.",
+            )
+        folder = exported
     try:
         open_folder(folder)
     except OSError as exc:

@@ -175,6 +175,114 @@ def check_ffprobe(settings: Settings) -> CheckResult:
     )
 
 
+REQUIRED_FFMPEG_FILTERS: dict[str, str] = {
+    "subtitles": "libass (burnt-in captions)",
+    "xfade": "scene transitions",
+    "zoompan": "camera moves",
+    "sidechaincompress": "music ducking",
+    "loudnorm": "loudness normalisation",
+}
+FULL_BUILD_HINT = (
+    "Install the full FFmpeg build (for example: winget install Gyan.FFmpeg, the 'full' "
+    "variant with libass) or point FFMPEG_PATH at one."
+)
+
+
+def check_ffmpeg_filters(settings: Settings) -> CheckResult:
+    """The filters the edit stage needs (``ffmpeg -filters``)."""
+    configured = settings.ffmpeg_path or os.environ.get("FFMPEG_PATH", "")
+    found = _find_tool("ffmpeg", configured)
+    if not found:
+        return CheckResult(
+            id="ffmpeg_filters",
+            name="FFmpeg filters",
+            status="fail",
+            detail="FFmpeg was not found, so its filters could not be checked.",
+            fix_hint=FULL_BUILD_HINT,
+        )
+    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    completed = subprocess.run(
+        [found, "-hide_banner", "-filters"],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=TOOL_TIMEOUT_SECONDS,
+        creationflags=flags,
+        check=False,
+    )
+    present: set[str] = set()
+    for line in (completed.stdout or "").splitlines():
+        parts = line.split()
+        if len(parts) >= 3 and "->" in parts[2]:
+            present.add(parts[1])
+    if not present:
+        return CheckResult(
+            id="ffmpeg_filters",
+            name="FFmpeg filters",
+            status="fail",
+            detail=f"{found} did not list its filters (exit code {completed.returncode}).",
+            fix_hint=FULL_BUILD_HINT,
+        )
+    missing = [name for name in REQUIRED_FFMPEG_FILTERS if name not in present]
+    if missing:
+        listed = ", ".join(f"{name} ({REQUIRED_FFMPEG_FILTERS[name]})" for name in missing)
+        return CheckResult(
+            id="ffmpeg_filters",
+            name="FFmpeg filters",
+            status="fail",
+            detail=f"This FFmpeg build lacks: {listed}. Videos cannot be rendered with it.",
+            fix_hint=FULL_BUILD_HINT,
+        )
+    return CheckResult(
+        id="ffmpeg_filters",
+        name="FFmpeg filters",
+        status="ok",
+        detail="libass, xfade, zoompan, sidechaincompress and loudnorm are available.",
+    )
+
+
+def check_fonts() -> CheckResult:
+    """The Noto fonts in ``assets/fonts`` that captions and popups draw with."""
+    from .render.fonts import FONT_FILES, fonts_dir, licence_present, missing_fonts
+
+    folder = fonts_dir()
+    if not folder.is_dir():
+        return CheckResult(
+            id="fonts",
+            name="Fonts",
+            status="fail",
+            detail=f"The fonts folder {folder} is missing. Captions and popups need it.",
+            fix_hint="Reinstall the app, or copy the assets/fonts folder from the repository "
+            "(or set CCS_FONTS_DIR to a folder with the Noto fonts).",
+        )
+    missing = missing_fonts()
+    if len(missing) == len(FONT_FILES):
+        return CheckResult(
+            id="fonts",
+            name="Fonts",
+            status="fail",
+            detail=f"No Noto font was found in {folder}.",
+            fix_hint="Copy the assets/fonts folder from the repository into the app folder.",
+        )
+    if missing:
+        return CheckResult(
+            id="fonts",
+            name="Fonts",
+            status="warn",
+            detail=f"Missing in {folder}: {', '.join(missing)}. Captions in those languages "
+            "fall back to a system font.",
+            fix_hint="Copy the missing font files from the repository's assets/fonts folder.",
+        )
+    licence = "" if licence_present() else " (the OFL.txt licence file is missing)"
+    return CheckResult(
+        id="fonts",
+        name="Fonts",
+        status="ok",
+        detail=f"{len(FONT_FILES)} Noto fonts in {folder}{licence}.",
+    )
+
+
 def check_deno() -> CheckResult:
     found = shutil.which("deno")
     if not found:
@@ -406,6 +514,8 @@ def run_all(settings: Settings) -> DoctorReport:
         _safe("python_version", "Python", check_python_version),
         _safe("ffmpeg", "FFmpeg", lambda: check_ffmpeg(settings)),
         _safe("ffprobe", "FFprobe", lambda: check_ffprobe(settings)),
+        _safe("ffmpeg_filters", "FFmpeg filters", lambda: check_ffmpeg_filters(settings)),
+        _safe("fonts", "Fonts", check_fonts),
         _safe("deno", "Deno", check_deno),
         _safe("yt_dlp", "yt-dlp", check_yt_dlp),
         _safe("webview2", "WebView2 runtime", check_webview2),

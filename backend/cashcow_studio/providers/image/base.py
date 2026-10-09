@@ -128,6 +128,18 @@ class ImageCapabilities(BaseModel):
             label = ""
         return self.price_by_size_usd.get(label, self.price_per_image_usd)
 
+    def largest_size(self, max_label: str = "4K") -> str:
+        """The biggest size label the tool offers, capped at ``max_label`` (``2K`` by default
+        when the list is empty or holds no known label)."""
+        cap = SIZE_LABELS.get((max_label or "").strip().upper(), SIZE_LABELS["4K"])
+        known = [s.strip().upper() for s in self.sizes if s.strip().upper() in SIZE_LABELS]
+        fitting = [s for s in known if SIZE_LABELS[s] <= cap]
+        if fitting:
+            return max(fitting, key=lambda s: SIZE_LABELS[s])
+        if known:
+            return min(known, key=lambda s: SIZE_LABELS[s])
+        return "2K"
+
 
 class ImageRequest(BaseModel):
     """One scene image. The storyboard stage prefixes the style guide to ``prompt`` already;
@@ -141,6 +153,7 @@ class ImageRequest(BaseModel):
     reference_images: list[Path] = []
     seed: int | None = Field(default=None, ge=0)
     style: str = ""
+    model: str = Field(default="", description="model id; empty = the provider's default")
     scene_id: str | None = Field(default=None, description="storyboard scene, for logs")
 
     @model_validator(mode="after")
@@ -162,7 +175,7 @@ class ImageRequest(BaseModel):
                 references.append(str(path))
         payload = {
             "provider": provider,
-            "model": model,
+            "model": model or self.model,
             "prompt": self.prompt,
             "negative_prompt": self.negative_prompt,
             "aspect": self.aspect,

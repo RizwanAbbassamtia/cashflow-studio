@@ -19,7 +19,9 @@ def test_rules_file_is_complete_and_consistent() -> None:
     assert len(ids) == len(set(ids))
     assert set(ids) == set(CHECKS), "every rule needs a check and every check a rule"
     for item in rules:
-        assert item.stage in {"title", "script", "storyboard"}
+        assert item.stage in {
+            "title", "script", "storyboard", "voice", "images", "edit", "export"
+        }
         assert item.severity in {"block", "warn"}
         assert item.source and item.title
         assert re.match(r"^\d{4}-\d{2}-\d{2}$", item.last_verified), item.id

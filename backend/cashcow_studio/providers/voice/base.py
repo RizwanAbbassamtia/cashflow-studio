@@ -15,7 +15,7 @@ import hashlib
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Literal, Protocol, runtime_checkable
+from typing import Any, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -42,10 +42,21 @@ class ProviderCapabilities(BaseModel):
     price_per_unit_usd: float = Field(default=0.0, ge=0, description="per billing unit")
     max_chars: int | None = Field(default=None, description="longest text per request")
     key_env: str = Field(default="", pattern=r"^[A-Z0-9_]*$", description="name of the key")
+    extra_key_envs: list[str] = Field(
+        default=[], description="other environment variables the tool needs (never values)"
+    )
     docs_url: str = ""
     notes: str = ""
     verified_on: str | None = Field(
         default=None, description="date (YYYY-MM-DD) the prices and limits were last checked"
+    )
+    models: list[str] = Field(default=[], description="model ids the tool offers")
+    default_model: str = Field(default="", description="model used when the channel names none")
+    base_url: str = Field(default="", description="API root; empty = the adapter's default")
+    http: dict[str, Any] = Field(
+        default={},
+        description="request recipe for the generic HTTP adapter (url, method, headers, "
+        "body_template, response); see config/providers.yaml",
     )
 
 

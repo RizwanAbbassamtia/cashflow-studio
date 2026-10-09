@@ -16,7 +16,9 @@ is rebuilt from the folders whenever they disagree. Every check-then-write runs 
 
 from __future__ import annotations
 
+import errno
 import json
+import os
 import shutil
 import sqlite3
 import threading
@@ -75,6 +77,11 @@ class ProjectStoreError(Exception):
 
 class ProjectNotFound(ProjectStoreError):
     pass
+
+
+class ProjectFolderBusy(ProjectStoreError):
+    """The folder cannot be moved because a file inside it is still open (a render, a
+    conversion or a scan is still running)."""
 
 
 def utc_now() -> datetime:
@@ -221,7 +228,14 @@ class ProjectStore:
         return True
 
     def archive(self, project_id: str) -> Path:
-        """Move the project folder to ``_archived/`` and drop its index row. Never deletes."""
+        """Move the project folder to ``_archived/`` and drop its index row. Never deletes.
+
+        The move is a plain rename, which is all-or-nothing. When Windows refuses it
+        because a file inside is still open (FFmpeg is still writing a render, say) the
+        archive is refused with :class:`ProjectFolderBusy` and nothing changes; a copy-and-
+        delete fallback would leave a half-copied project behind. Only when the archive
+        folder sits on another drive is the folder copied over.
+        """
         project = self.get(project_id)
         folder = Path(project.folder)
         with LOCK:
@@ -231,7 +245,16 @@ class ProjectStore:
             while destination.exists():
                 destination = self.archive_dir / f"{folder.name}-{counter}"
                 counter += 1
-            shutil.move(str(folder), str(destination))
+            try:
+                os.rename(folder, destination)
+            except OSError as exc:
+                if exc.errno == errno.EXDEV:
+                    shutil.move(str(folder), str(destination))
+                else:
+                    raise ProjectFolderBusy(
+                        f"The project folder {folder.name} is still in use (a step is still "
+                        "writing to it). Wait until the step stops, then archive it again."
+                    ) from exc
             with db.connect(self.app_data_dir) as conn:
                 conn.execute("DELETE FROM projects WHERE id = ?", (project_id,))
         return destination

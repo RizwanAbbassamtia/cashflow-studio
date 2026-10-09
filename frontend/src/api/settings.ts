@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 
-import { resolveModelSettings, type ModelSettings, type Settings, type SettingsUpdate } from "../types";
+import { resolveModelSettings, resolveRenderSettings, type ModelSettings, type RenderSettingsResolved, type Settings, type SettingsUpdate } from "../types";
 import { api } from "./client";
 import { queryKeys } from "./keys";
 
@@ -38,5 +38,15 @@ export function useUpdateSettings() {
 export function useModelSettings(): { query: ReturnType<typeof useSettings>; resolved: ModelSettings } {
   const query = useSettings();
   const resolved = useMemo(() => resolveModelSettings(query.data), [query.data]);
+  return { query, resolved };
+}
+
+/**
+ * The nested `render` and `captions` settings (M4, docs/M3-M4-CONTRACT.md section 5) with
+ * defaults filled in: default presets, x264 preset, 4K on/off, captions on/off and style.
+ */
+export function useRenderSettings(): { query: ReturnType<typeof useSettings>; resolved: RenderSettingsResolved } {
+  const query = useSettings();
+  const resolved = useMemo(() => resolveRenderSettings(query.data), [query.data]);
   return { query, resolved };
 }

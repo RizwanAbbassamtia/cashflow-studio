@@ -43,9 +43,14 @@ Behaviour:
   (`audio/aligner.py` protocol with a `whisperx` adapter that imports lazily and a `none`
   default) use it; else distribute sentences over the total duration by character share
   (source `estimated`) and flag `timing_confidence: "low"` in the review payload.
-- Gates (policy ids `voice.consent`, `voice.duration`): consent record present for the voice
-  (channel `voice.consent` fields or a `consent.json` next to the clone sample) else block;
-  total duration within +/-25% of target length else warn; words < 40 ms or > 2 s flagged.
+- Gates (policy ids `voice.consent`, `voice.duration`): when the channel names a cloned voice
+  (`voice.clone_ref`, a clone made in the tool's own website) or a voice sample
+  (`voice.sample_path`), a consent record must be present (the channel's `voice.consent`
+  fields `{owner_name, consented_by, consented_at, statement}`, filled in the Channel Setup
+  Voice tab, or a `consent.json` next to the sample) else block; a voice with neither is a
+  stock voice and needs none; total duration within +/-25% of target length else warn;
+  words < 40 ms or > 2 s flagged. The provenance bundle names the record it found, or says
+  `none recorded`.
 - Cost: provider `estimate_cost` per sentence, summed into `costs.voice_usd`.
 - Review payload: duration, per-sentence list with start/end and a `play_url` served by
   `GET /api/projects/{id}/files/05_voice/sentences/{sid}.wav` (see section 5), timing source,
@@ -149,7 +154,10 @@ cleanly without the key; a `@pytest.mark.live` test when the key exists). Keep `
 - Progress: run FFmpeg with `-progress pipe:1 -nostats`, parse `out_time_us`, report
   `ctx.report(f"Rendering {preset} {pct}%", pct)`; cancellable through the context cancel flag.
 - Outputs: `07_edit/proxy.mp4` always; `07_edit/final_<preset>.mp4` for each requested preset
-  (default `["1080p"]`; edits `{presets: [...]}` add more); `07_edit/render.log`.
+  (default `["1080p"]`; edits `{presets: [...]}` add more: a finished render is kept while
+  the timeline without its preset list, the popup switch, the x264 speed and the source
+  files are unchanged, recorded as `render_key` per preset in `render_state.json`);
+  `07_edit/render.log`.
 - The build must stay correct for 1 to 80 scenes; use filter scripts via `-filter_complex_script`
   to avoid command-line length limits on Windows.
 - Gates: `edit.music_license` (warn when music used without licence), `edit.duration`
@@ -185,13 +193,19 @@ competitor_thumbnail.jpg` (if any), channel `thumbnail` config, brand colours, l
   model, synthid|c2pa flags}], voice: {provider, model, consent_ref}}`.
 - Provenance bundle: `08_export/provenance.json` and `provenance.md` (research pick, title
   variants, script versions, prompts used, QA verdicts, review log from `job.json`, licences).
-- Export: copy `final_<preset>.mp4` as `<topic-slug>_<preset>.mp4`, thumbnails and
-  `metadata.json` into `<channel export_folder or settings exports_dir>/<channel-slug>/<date>_<topic-slug>/`.
+- Export (Approve = export): the run writes the whole pack into `08_export` only. When the
+  reviewer approves, the engine calls the stage's `on_approve(ctx)` hook, which copies
+  `final_<preset>.mp4` as `<topic-slug>_<preset>.mp4`, the chosen thumbnails, `metadata.json`
+  and the provenance files into `<channel export_folder or settings exports_dir>/<channel-slug>/<date>_<topic-slug>/`
+  (a copy whose destination already holds the same file is skipped). Only when the export
+  stage is set to `auto` does the run itself copy. `export.json` and the review payload carry
+  `exported: bool` so the screen can tell "ready" from "in the export folder".
   Gate `export.title_promise` (LLM check that the title's claim appears early in the script;
-  warn), `export.files_present` (block if a selected preset is missing).
-- Review payload: thumbnails (urls), metadata fields, disclosure flag, export folder; edits:
-  `{metadata: {...}}`, `{thumbnail_choice: "v1"|"v2"|"v3"}`, `{altered_or_synthetic: bool}`,
-  `{headline: str}` (re-render thumbnail text only).
+  warn), `export.files_present` (block if a selected preset has no rendered file).
+- Review payload: thumbnails (urls), metadata fields, disclosure flag, export folder,
+  `exported`; edits: `{metadata: {...}}`, `{thumbnail_choice: "v1"|"v2"|"v3"}`,
+  `{altered_or_synthetic: bool}`, `{headline: str}` (re-render thumbnail text only). Edits
+  rewrite the pack in `08_export`; the copy happens on the approval that carries them.
 
 ## 5. File serving and API additions
 
@@ -220,7 +234,11 @@ Stubs exist and are wired in `components/review/ReviewPanel.tsx`: `VoiceReview`,
   checkboxes (720p, 1080p, 4K) with render buttons and progress bars, warnings, Approve.
 - `ExportReview`: thumbnail picker (3 variants + headline edit), metadata editor (title,
   description, tags, chapters, pinned comment), disclosure toggle, export folder with Open
-  folder, Approve = export.
+  folder, Approve = export (the folder panel says "Not exported yet" until the payload's
+  `exported` is true).
+- `DELETE /api/projects/{id}` (archive) waits for the running step's worker thread and
+  answers 409 when a file in the folder is still in use (wait until the step stops); it
+  never leaves a half-copied project behind.
 - Settings: "Render" card (default presets, x264 preset, 4K on/off, captions on/off) and the
   Doctor shows fonts and FFmpeg filter checks. Dashboard: exports count becomes real.
 - Types mirror `models/timing.py`, `models/images.py`, `models/timeline.py`, `models/export.py`.

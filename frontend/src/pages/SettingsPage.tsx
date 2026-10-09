@@ -5,6 +5,7 @@ import { ApiKeysCard } from "../components/settings/ApiKeysCard";
 import { DoctorPanel } from "../components/settings/DoctorPanel";
 import { ModelsCard } from "../components/settings/ModelsCard";
 import { PathsCard } from "../components/settings/PathsCard";
+import { RenderCard } from "../components/settings/RenderCard";
 
 export function SettingsPage() {
   const location = useLocation();
@@ -24,6 +25,7 @@ export function SettingsPage() {
       <PathsCard />
       <ApiKeysCard />
       <ModelsCard />
+      <RenderCard />
       <DoctorPanel />
     </div>
   );

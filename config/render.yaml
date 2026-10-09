@@ -1,0 +1,87 @@
+# Render settings for the edit stage (backend/cashcow_studio/render/). Values here apply to
+# every channel; Settings > Render chooses the default presets, the x264 speed and whether 4K
+# is allowed. Anything missing falls back to the same defaults built into render/presets.py.
+
+fps: 30
+tail_s: 0.8                 # the last scene runs this long past the end of the voice
+scale_flags: lanczos        # scaler used to fit the pictures to the frame
+
+x264:
+  preset: medium            # Settings > Render overrides this (ultrafast ... veryslow)
+  crf: 20
+  profile: high
+  pix_fmt: yuv420p
+  movflags: +faststart
+
+audio:
+  codec: aac
+  bitrate_kbps: 192
+  sample_rate: 48000
+  loudnorm: { i: -16, tp: -1.5, lra: 11 }   # EBU R128 target: -16 LUFS, true peak -1.5 dBTP
+
+ducking:                    # sidechaincompress: the voice ducks the music
+  threshold: 0.03
+  ratio: 8
+  attack_ms: 300
+  release_ms: 800
+
+music:
+  gain_db: -18
+  fade_in_s: 1.0
+  fade_out_s: 2.0
+
+# Frame sizes per preset for a 16:9 (landscape) and a 9:16 (portrait) video. The pictures are
+# first fitted to a larger "canvas" (canvas_scale x the frame, at most max_canvas_px wide or
+# tall) so the camera move is smooth; a bigger canvas costs memory (about 6 MB per scene at
+# 2560 px for every scene of the video at once).
+presets:
+  720p:
+    landscape: [1280, 720]
+    portrait: [720, 1280]
+    crf: 20
+    canvas_scale: 2.0
+    max_canvas_px: 2560
+  1080p:
+    landscape: [1920, 1080]
+    portrait: [1080, 1920]
+    crf: 20
+    canvas_scale: 1.5
+    max_canvas_px: 2880
+  2160p:
+    landscape: [3840, 2160]
+    portrait: [2160, 3840]
+    crf: 20
+    canvas_scale: 1.0
+    max_canvas_px: 3840
+    requires_enable_4k: true
+
+proxy:                      # always rendered; what the review screen plays
+  landscape: [854, 480]
+  portrait: [480, 854]
+  crf: 30
+  x264_preset: ultrafast
+  canvas_scale: 1.0
+  max_canvas_px: 1280
+
+transitions:
+  max_share_of_shorter_scene: 0.25   # a transition never takes more than a quarter of a scene
+  min_frames: 2
+
+popups:                     # sizes at 1080p; scaled by min(width, height) / 1080
+  font_px: 64
+  padding_px: 24
+  radius_px: 18
+  margin_px: 60
+  max_width_share: 0.8
+  fade_s: 0.3
+  slide_s: 0.35
+  slide_px: 120
+  lead_s: 0.3               # a popup appears this long after its key sentence starts
+  max_show_s: 4.0
+  end_margin_s: 0.2         # ... and leaves this long before the scene ends
+  min_show_s: 0.6
+
+captions:
+  margin_v_px: 60           # at 1080p; the ASS file scales with the frame
+  outline: 2
+  shadow: 0

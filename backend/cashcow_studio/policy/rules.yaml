@@ -201,3 +201,139 @@ rules:
         - '\b(that|which) (says|reads|spells)\b'
         - '\b(sign|banner|poster|screen|board|label) (that )?(reading|saying|with) '
         - '\bbrand(ed)? logo\b'
+
+  # Voice -----------------------------------------------------------------------------------
+  - id: voice.consent
+    title: Consent recorded for the cloned voice
+    stage: voice
+    severity: block
+    description: >
+      Only the team's own enrolled voices may be cloned. When the channel names a cloned
+      voice (voice.clone_ref, a clone made in the tool's own website) or a sample recording
+      (voice.sample_path), a consent record must exist: the Consent fields of the channel's
+      voice config, or a consent.json next to the sample (owner_name, consented_by,
+      consented_at). A voice with neither is a stock voice. The mock voice is nobody's voice
+      and needs none. require_when: clone_ref_or_sample (default), clone_ref, sample_path,
+      always.
+    source: https://support.google.com/youtube/answer/15426241
+    last_verified: 2026-10-10
+    parameters: { require_when: clone_ref_or_sample, exempt_providers: [mock] }
+
+  - id: voice.duration
+    title: Narration length near the target
+    stage: voice
+    severity: warn
+    description: >
+      The finished narration should run within 25 percent of the channel's target length
+      (long_form_minutes or shorts_seconds); far outside it the script was too long or too short.
+    source: internal
+    last_verified: 2026-10-09
+    parameters: { tolerance: 0.25 }
+
+  # Images ----------------------------------------------------------------------------------
+  - id: images.qa
+    title: Every scene has an accepted picture
+    stage: images
+    severity: block
+    description: >
+      A vision model checks each picture: it must show what the scene asked for and contain
+      no text, logo or real person, with a quality score of at least min_score out of 10.
+      A rejected picture is regenerated up to max_retries times with the reason added to the
+      prompt; rejected files are kept in 06_images/rejected/. Pictures with readable text or
+      brand marks are unusable (the app draws all on-screen text itself) and real people's
+      likenesses are a privacy and policy risk.
+    source: https://support.google.com/youtube/answer/1311392
+    last_verified: 2026-10-09
+    parameters: { min_score: 5, max_retries: 3 }
+
+  - id: images.variety
+    title: No two pictures look the same
+    stage: images
+    severity: warn
+    description: >
+      64-bit perceptual hash (pHash) distance between any two accepted pictures of the video
+      must be above max_distance; closer pairs read as the same picture reused. The same
+      distance against the channel's earlier videos makes the stage regenerate with a new seed.
+    source: https://support.google.com/youtube/answer/1311392
+    last_verified: 2026-10-09
+    parameters: { max_distance: 6 }
+
+  - id: images.budget
+    title: Monthly image budget
+    stage: images
+    severity: warn
+    description: >
+      The channel's images.monthly_budget_images (Channel Setup) caps how many pictures the
+      image tool makes per calendar month, counting every try. Reported, never blocking.
+    source: internal
+    last_verified: 2026-10-09
+    parameters: {}
+
+  # Export ----------------------------------------------------------------------------------
+  - id: export.thumbnail_similarity
+    title: Thumbnail is not a copy of the competitor's
+    stage: export
+    severity: block
+    description: >
+      The perceptual-hash distance (0-64 bits) between the chosen thumbnail and the
+      competitor's thumbnail must be above 12; a near copy reads as repetitious content.
+    source: https://support.google.com/youtube/answer/1311392
+    last_verified: 2026-10-09
+    parameters: { min_distance: 12 }
+
+  - id: export.title_promise
+    title: Title promise appears early
+    stage: export
+    severity: warn
+    description: >
+      The title's claim should be made in the first 20 percent of the script, or the video
+      is misleading for the viewers who click. Reported, not blocking.
+    source: https://support.google.com/youtube/answer/9288567
+    last_verified: 2026-10-09
+    parameters: { first_share: 0.2 }
+
+  - id: export.files_present
+    title: Every selected video file is present
+    stage: export
+    severity: block
+    description: >
+      A rendered video must exist for every preset the person selected before the files
+      are handed over for upload.
+    source: internal
+    last_verified: 2026-10-09
+    parameters: {}
+
+  # Edit ------------------------------------------------------------------------------------
+  - id: edit.music_license
+    title: Background music has a licence
+    stage: edit
+    severity: warn
+    description: >
+      Music is only safe to upload when a licence sits next to the track (a
+      <track>.license.txt sidecar or a LICENSE file in the music folder). Reported, so the
+      reviewer can swap the track or add the licence.
+    source: https://support.google.com/youtube/answer/2797370
+    last_verified: 2026-10-09
+    parameters: {}
+
+  - id: edit.duration
+    title: Rendered length matches the timeline
+    stage: edit
+    severity: block
+    description: >
+      Every rendered file must be within one second of the length the timeline asks for;
+      a shorter or longer file means a scene, the voice or the music went wrong.
+    source: internal
+    last_verified: 2026-10-09
+    parameters: { tolerance_s: 1.0 }
+
+  - id: edit.audio_peaks
+    title: Audio peaks under -1 dBTP
+    stage: edit
+    severity: warn
+    description: >
+      YouTube re-encodes the audio; true peaks above -1 dBTP can clip after that. The mix is
+      normalised to -16 LUFS with a -1.5 dBTP ceiling, so a louder peak means something odd.
+    source: https://support.google.com/youtube/answer/1722171
+    last_verified: 2026-10-09
+    parameters: { max_true_peak_dbtp: -1.0 }

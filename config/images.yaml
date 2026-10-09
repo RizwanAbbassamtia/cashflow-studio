@@ -1,0 +1,37 @@
+# Images stage settings: what the app sends to the image tool and how it checks the pictures.
+#
+# Gate thresholds (minimum QA score, number of retries, duplicate distance) live in
+# backend/cashcow_studio/policy/rules.yaml (rules images.qa, images.variety, images.budget).
+# Loaded by backend/cashcow_studio/images/config.py.
+
+generation:
+  # largest = the tool's biggest size for the aspect ratio (4K on Gemini); or 1K, 2K, 4K, or an
+  # explicit WIDTHxHEIGHT. The CCS_IMAGE_SIZE environment variable overrides this for one run.
+  size: largest
+  max_size_label: 4K          # never ask for more than this even when the tool offers it
+
+prompt:
+  # Every scene prompt is "<style guide>. <scene description>. <suffix>".
+  suffix: "No text, no logos, no watermarks."
+  # Appended when a picture was rejected; {reason} is the plain-English reason from the check.
+  retry_note: "The previous picture was rejected because {reason}. Fix that and keep everything else the same."
+  # Appended when a reviewer asked for a regenerate with a note; {note} is the note.
+  note_prefix: "Reviewer note: {note}."
+
+references:
+  style_sheet: true           # pass 06_images/style_sheet.png as a reference image
+  previous_scene: true        # also pass the previous scene's picture for continuity
+
+style_sheet:
+  max_side_px: 2048           # the copied reference picture is shrunk to this long side
+  reference_extensions: [".png", ".jpg", ".jpeg", ".webp"]
+
+# Model id per image provider. Empty or missing = the provider's default from providers.yaml.
+# The channel's images.model (Channel Setup) wins over both.
+models:
+  gemini: gemini-nano-banana-2.1
+  mock: mock-placeholder
+
+qa:
+  enabled: true
+  max_side_px: 1568           # pictures are shrunk to this long side before the vision check

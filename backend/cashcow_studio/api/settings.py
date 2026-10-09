@@ -26,8 +26,10 @@ from pydantic import BaseModel, ValidationError
 from ..config import (
     NESTED_KEYS,
     NESTED_MODELS,
+    CaptionsSettings,
     LlmSettings,
     PipelineSettings,
+    RenderSettings,
     ResearchSettings,
     Settings,
 )
@@ -80,6 +82,8 @@ class SettingsView(BaseModel):
     research: ResearchSettings
     pipeline: PipelineSettings
     voice: VoiceSettingsView
+    render: RenderSettings
+    captions: CaptionsSettings
     providers: list[ProviderRow]
 
 
@@ -100,6 +104,8 @@ class SettingsUpdate(BaseModel):
     research: dict[str, Any] | None = None
     pipeline: dict[str, Any] | None = None
     voice: dict[str, Any] | None = None
+    render: dict[str, Any] | None = None
+    captions: dict[str, Any] | None = None
 
 
 def _effective_llm(settings: Settings) -> LlmSettings:
@@ -153,6 +159,8 @@ def _view(settings: Settings, store: SettingsStore) -> SettingsView:
         research=settings.research,
         pipeline=settings.pipeline,
         voice=_effective_voice(settings),
+        render=settings.render,
+        captions=settings.captions,
         providers=_provider_rows(settings),
     )
 
@@ -177,6 +185,8 @@ _NESTED_LABELS = {
     "research": "research settings",
     "pipeline": "pipeline settings",
     "voice": "voice settings",
+    "render": "render settings",
+    "captions": "caption settings",
 }
 
 

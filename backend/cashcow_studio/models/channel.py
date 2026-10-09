@@ -99,6 +99,21 @@ class Framework(BaseModel):
     notes: str = ""
 
 
+class VoiceConsent(BaseModel):
+    """The consent record for a cloned voice (only the team's own enrolled voices may be
+    cloned). Filled in the Channel Setup form; empty for a stock voice. A ``consent.json``
+    next to the voice sample is the alternative place for the same record."""
+
+    owner_name: str = Field(default="", description="whose voice this is")
+    consented_by: str = Field(default="", description="who recorded the consent")
+    consented_at: datetime | None = None
+    statement: str = Field(default="", description="the text the owner agreed to")
+
+    @property
+    def is_filled(self) -> bool:
+        return bool(self.owner_name.strip())
+
+
 class VoiceConfig(BaseModel):
     tool: VoiceTool = "other"
     clone_ref: str = Field(default="", description="clone link or voice id")
@@ -111,6 +126,7 @@ class VoiceConfig(BaseModel):
     returns_word_timestamps: bool | None = None
     api_key_env: str = Field(default="", pattern=r"^[A-Z0-9_]*$")
     monthly_budget_characters: int | None = None
+    consent: VoiceConsent = VoiceConsent()
 
 
 class ImageConfig(BaseModel):

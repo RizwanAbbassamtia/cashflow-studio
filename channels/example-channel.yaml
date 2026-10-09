@@ -60,6 +60,11 @@ voice:
   returns_word_timestamps: false # if false the app aligns the audio with Whisper
   api_key_env: FISH_AUDIO_API_KEY
   monthly_budget_characters: 1000000
+  consent:                       # required when clone_ref or sample_path is set (own voices only)
+    owner_name: Daniel Example   # whose voice this is
+    consented_by: Imran          # who recorded the consent
+    consented_at: 2026-10-01T10:00:00Z
+    statement: I agree that my voice may be cloned for the Kind Ledger channel.
 
 images:
   tool: google_gemini            # google_gemini | openai | flux_bfl | flux_fal | flux_replicate | ideogram | recraft | leonardo | local | manual | other

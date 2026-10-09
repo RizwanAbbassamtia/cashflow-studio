@@ -206,6 +206,54 @@ class MockLLMClient(BaseLLMClient):
         self.record(usage, project_id=project_id, stage=stage)
         return parsed, usage
 
+    async def analyze_image(
+        self,
+        task: str,
+        image_path: Path,
+        prompt: str,
+        schema: type[T],
+        model: str | None = None,
+        *,
+        project_id: str | None = None,
+        stage: str | None = None,
+    ) -> T:
+        """A pass verdict for any readable picture; a fail when the prompt says ``FAIL_QA``.
+
+        ``FAIL_QA_ONCE`` fails only the first try: once the stage's retry wording ("rejected")
+        is in the prompt, the picture passes, so the rejection-and-retry path can be tested.
+        """
+        started = time.monotonic()
+        requested = self.model_for(task, model)
+        path = Path(image_path)
+        try:
+            from PIL import Image
+
+            with Image.open(path) as image:
+                size = image.size
+        except OSError as exc:
+            raise LLMError(f"The mock could not read the picture {path.name}: {exc}") from exc
+        self.calls.append({"task": task, "model": requested, "image": str(path), "size": size,
+                           "prompt": prompt})
+        generator = IMAGE_GENERATORS.get(task)
+        try:
+            data = generator(prompt) if generator else _empty_instance(schema)
+            parsed = schema.model_validate(data)
+        except ValidationError as exc:
+            raise LLMError(f"The mock answer for '{task}' did not fit its schema: {exc}") from exc
+        usage = LLMUsage(
+            task=task,
+            model=MOCK_MODEL,
+            requested_model=requested,
+            input_tokens=max(1, len(prompt) // 4) + 1500,  # a picture costs about 1500 tokens
+            output_tokens=max(1, len(parsed.model_dump_json()) // 4),
+            cost_usd=0.0,
+            duration_ms=int((time.monotonic() - started) * 1000),
+            request_id=f"mock-{_seed(task, path.name, prompt) % 1_000_000:06d}",
+        )
+        self.last_usage = usage
+        self.record(usage, project_id=project_id, stage=stage)
+        return parsed
+
 
 def _empty_instance(schema: type[BaseModel]) -> dict[str, Any]:
     """For a task the mock does not know: every list empty, every string blank."""
@@ -426,6 +474,45 @@ GENERATORS = {
     "speech_normalize": mock_speech_normalize,
     "storyboard": mock_storyboard,
     "policy_check": mock_policy_check,
+}
+
+
+# Vision generators, one per ``analyze_image`` task; they get the prompt text ----------------
+
+FAIL_QA_MARKER = "FAIL_QA"
+FAIL_QA_ONCE_MARKER = "FAIL_QA_ONCE"
+RETRY_MARKER = "was rejected"
+"""Part of the retry wording the images stage appends (config/images.yaml, prompt.retry_note)."""
+
+
+def mock_image_qa(prompt: str) -> dict[str, Any]:
+    """Pass, unless the prompt carries ``FAIL_QA`` (``FAIL_QA_ONCE``: only before a retry)."""
+    fail = FAIL_QA_MARKER in prompt
+    if FAIL_QA_ONCE_MARKER in prompt and RETRY_MARKER in prompt.lower():
+        fail = False
+    if fail:
+        return {
+            "matches_prompt": False,
+            "has_text": "FAIL_QA_TEXT" in prompt,
+            "has_real_person": "FAIL_QA_PERSON" in prompt,
+            "has_logo": "FAIL_QA_LOGO" in prompt,
+            "artifacts": ["warped shapes (mock)"],
+            "score": 2,
+            "reason": "Mock check: the prompt asked for a failure (FAIL_QA).",
+        }
+    return {
+        "matches_prompt": True,
+        "has_text": False,
+        "has_real_person": False,
+        "has_logo": False,
+        "artifacts": [],
+        "score": 8,
+        "reason": "Mock check: the picture matches the scene and carries no text or logos.",
+    }
+
+
+IMAGE_GENERATORS = {
+    "image_qa": mock_image_qa,
 }
 
 

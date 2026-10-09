@@ -339,6 +339,169 @@ def check_storyboard_prompt_text_free(r: Rule, context: dict[str, Any]) -> tuple
     return False, f"Prompt asks for text or a logo: {_indexes(bad)}."
 
 
+# Images checks -----------------------------------------------------------------------------
+# context: {"scenes": [{"scene": int, "accepted": bool, "attempts": int, "reason": str}],
+#           "duplicates": [{"scenes": [int, int], "distance": int}],
+#           "monthly_budget": int | None, "used_this_month": int, "generated_now": int}
+# (scene numbers in the details are 1-based, like the file names scene_NN.png)
+
+
+def _image_scenes(context: dict[str, Any]) -> list[dict[str, Any]]:
+    return [s for s in context.get("scenes", []) if isinstance(s, dict)]
+
+
+def check_images_qa(r: Rule, context: dict[str, Any]) -> tuple[bool, str]:
+    scenes = _image_scenes(context)
+    if not scenes:
+        return False, "No scenes to make pictures for."
+    missing = [s for s in scenes if not s.get("accepted", False)]
+    if not missing:
+        return True, f"All {len(scenes)} scenes have an accepted picture."
+    retries = int(r.parameters.get("max_retries", 3))
+    parts = []
+    for s in missing[:6]:
+        number = int(s.get("scene", 0)) + 1
+        reason = str(s.get("reason") or "no picture").strip().rstrip(".")
+        parts.append(f"#{number} ({reason})")
+    more = f" and {len(missing) - 6} more" if len(missing) > 6 else ""
+    return False, (
+        f"{len(missing)} of {len(scenes)} scenes have no accepted picture after up to "
+        f"{retries + 1} tries: {', '.join(parts)}{more}."
+    )
+
+
+def check_images_variety(r: Rule, context: dict[str, Any]) -> tuple[bool, str]:
+    limit = int(r.parameters.get("max_distance", 6))
+    pairs = [p for p in context.get("duplicates", []) if isinstance(p, dict)]
+    if not pairs:
+        return True, f"No two pictures are within {limit} bits of each other."
+    labels = []
+    for p in pairs[:6]:
+        scenes = [int(i) + 1 for i in p.get("scenes", [])][:2]
+        if len(scenes) == 2:
+            labels.append(f"#{scenes[0]} and #{scenes[1]} ({int(p.get('distance', 0))})")
+    more = f" and {len(pairs) - 6} more" if len(pairs) > 6 else ""
+    return False, f"Pictures that look the same (distance): {', '.join(labels)}{more}."
+
+
+def check_images_budget(r: Rule, context: dict[str, Any]) -> tuple[bool, str]:
+    budget = context.get("monthly_budget")
+    used = int(context.get("used_this_month", 0))
+    now = int(context.get("generated_now", 0))
+    if not isinstance(budget, int) or isinstance(budget, bool) or budget <= 0:
+        return True, f"No monthly image budget set; {now} picture(s) made in this run."
+    total = used + now
+    if total <= budget:
+        return True, f"{total} of {budget} pictures used this month ({now} in this run)."
+    return False, (
+        f"Over the monthly image budget: {total} of {budget} pictures used this month "
+        f"({now} in this run)."
+    )
+
+
+# Export checks -----------------------------------------------------------------------------
+# context: {"thumbnail_distance": int | None (pHash bits between the chosen thumbnail and the
+#           competitor's), "competitor_thumbnail": bool, "title_promise_early": bool | None,
+#           "title_promise_note": str, "presets": [str], "missing_presets": [str]}
+
+
+def check_export_thumbnail_similarity(r: Rule, context: dict[str, Any]) -> tuple[bool, str]:
+    minimum = int(r.parameters.get("min_distance", 12))
+    distance = context.get("thumbnail_distance")
+    if not context.get("competitor_thumbnail", False):
+        return True, "No competitor thumbnail to compare with."
+    if distance is None:
+        return True, "The competitor thumbnail has no detail to compare with."
+    distance = int(distance)
+    if distance > minimum:
+        return True, (
+            f"The thumbnail differs from the competitor's by {distance} of 64 bits "
+            f"(more than {minimum} needed)."
+        )
+    return False, (
+        f"The thumbnail looks too much like the competitor's: {distance} of 64 bits differ, "
+        f"more than {minimum} are needed. Change the headline or the picture."
+    )
+
+
+def check_export_title_promise(r: Rule, context: dict[str, Any]) -> tuple[bool, str]:
+    value = context.get("title_promise_early")
+    note = str(context.get("title_promise_note") or "").strip()
+    share = float(r.parameters.get("first_share", 0.2))
+    if value is None:
+        return True, "Not checked."
+    if value:
+        return True, note or (
+            f"The title's promise appears in the first {_pct(share)} of the script."
+        )
+    return False, note or (
+        f"The title's promise does not appear in the first {_pct(share)} of the script."
+    )
+
+
+def check_export_files_present(r: Rule, context: dict[str, Any]) -> tuple[bool, str]:
+    presets = [str(p) for p in context.get("presets", [])]
+    missing = [str(p) for p in context.get("missing_presets", [])]
+    if not presets:
+        return False, "No video preset was selected for the export."
+    if not missing:
+        return True, f"Every selected video file is there: {', '.join(presets)}."
+    return False, (
+        f"Missing rendered video for: {', '.join(missing)}. Render it in the edit step "
+        "(or drop the preset) and run the export again."
+    )
+
+
+# Edit checks -------------------------------------------------------------------------------
+# context: {"music_path": str | None, "music_license_ok": bool,
+#           "renders": [{"preset": str, "expected_s": float, "actual_s": float | None}],
+#           "true_peak_dbtp": float | None (None = silent or not measured)}
+
+
+def check_edit_music_license(r: Rule, context: dict[str, Any]) -> tuple[bool, str]:
+    path = context.get("music_path")
+    if not path:
+        return True, "No background music in this video."
+    name = str(path).replace("\\", "/").rsplit("/", 1)[-1]
+    if context.get("music_license_ok", False):
+        return True, f"The music track {name} has a licence file."
+    return False, (
+        f"The music track {name} has no licence file. Put {name}.license.txt next to it (or a "
+        "LICENSE file in the music folder), or choose another track."
+    )
+
+
+def check_edit_duration(r: Rule, context: dict[str, Any]) -> tuple[bool, str]:
+    tolerance = float(r.parameters.get("tolerance_s", 1.0))
+    renders = [x for x in context.get("renders", []) if isinstance(x, dict)]
+    if not renders:
+        return False, "No video was rendered."
+    bad: list[str] = []
+    for item in renders:
+        expected = item.get("expected_s")
+        actual = item.get("actual_s")
+        label = str(item.get("preset", "?"))
+        if not isinstance(expected, int | float) or not isinstance(actual, int | float):
+            bad.append(f"{label} (length unknown)")
+        elif abs(float(actual) - float(expected)) > tolerance:
+            bad.append(f"{label} ({float(actual):.1f} s instead of {float(expected):.1f} s)")
+    if not bad:
+        return True, (
+            f"All {len(renders)} rendered file(s) are within {tolerance:g} s of the timeline."
+        )
+    return False, "Rendered length is off: " + ", ".join(bad) + "."
+
+
+def check_edit_audio_peaks(r: Rule, context: dict[str, Any]) -> tuple[bool, str]:
+    limit = float(r.parameters.get("max_true_peak_dbtp", -1.0))
+    peak = context.get("true_peak_dbtp")
+    if not isinstance(peak, int | float):
+        return True, "No audio peak to measure (silent audio or not measured)."
+    if float(peak) <= limit:
+        return True, f"True peak {float(peak):.1f} dBTP (limit {limit:g} dBTP)."
+    return False, f"True peak {float(peak):.1f} dBTP is above {limit:g} dBTP; the audio may clip."
+
+
 CHECKS: dict[str, Callable[[Rule, dict[str, Any]], tuple[bool, str]]] = {
     "title.count": check_title_count,
     "title.length": check_title_length,
@@ -359,4 +522,62 @@ CHECKS: dict[str, Callable[[Rule, dict[str, Any]], tuple[bool, str]]] = {
     "storyboard.popup_words": check_storyboard_popup_words,
     "storyboard.popup_share": check_storyboard_popup_share,
     "storyboard.prompt_text_free": check_storyboard_prompt_text_free,
+    "images.qa": check_images_qa,
+    "images.variety": check_images_variety,
+    "images.budget": check_images_budget,
+    "edit.music_license": check_edit_music_license,
+    "edit.duration": check_edit_duration,
+    "edit.audio_peaks": check_edit_audio_peaks,
+    "export.thumbnail_similarity": check_export_thumbnail_similarity,
+    "export.title_promise": check_export_title_promise,
+    "export.files_present": check_export_files_present,
 }
+
+
+# Voice checks ------------------------------------------------------------------------------
+# context: {"provider": str, "is_clone": bool, "consent_found": bool, "consent_ref": str,
+#           "consent_error": str, "owner_name": str, "duration_s": float, "target_s": float}
+
+
+def check_voice_consent(r: Rule, context: dict[str, Any]) -> tuple[bool, str]:
+    exempt = {str(p) for p in r.parameters.get("exempt_providers", ["mock"])}
+    provider = str(context.get("provider") or "")
+    if provider in exempt:
+        return True, "The mock voice is nobody's voice, so no consent is needed."
+    if not context.get("is_clone", False):
+        return True, (
+            "A stock voice is used (no clone, no sample recording), so no consent is needed."
+        )
+    if context.get("consent_found", False):
+        owner = str(context.get("owner_name") or "the voice owner")
+        where = str(context.get("consent_ref") or "the channel")
+        return True, f"Consent from {owner} is recorded ({where})."
+    error = str(context.get("consent_error") or "")
+    if error:
+        return False, f"The consent record could not be used: {error}"
+    return False, (
+        "No consent record for the cloned voice. Fill in the Consent fields in the channel's "
+        "Voice tab (owner, recorded by, date) or put a consent.json next to the voice sample "
+        "(owner_name, consented_by, consented_at)."
+    )
+
+
+def check_voice_duration(r: Rule, context: dict[str, Any]) -> tuple[bool, str]:
+    tolerance = float(r.parameters.get("tolerance", 0.25))
+    duration = float(context.get("duration_s", 0.0) or 0.0)
+    target = float(context.get("target_s", 0.0) or 0.0)
+    if target <= 0:
+        return True, f"{duration:.1f} s of narration (no target length)."
+    low, high = target * (1 - tolerance), target * (1 + tolerance)
+    detail = (
+        f"{duration:.1f} s of narration; target {target:.0f} s (allowed {low:.0f}-{high:.0f} s)."
+    )
+    return low <= duration <= high, detail
+
+
+CHECKS.update(
+    {
+        "voice.consent": check_voice_consent,
+        "voice.duration": check_voice_duration,
+    }
+)

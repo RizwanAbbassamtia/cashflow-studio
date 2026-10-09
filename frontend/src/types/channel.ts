@@ -141,6 +141,22 @@ export interface Framework {
   notes: string;
 }
 
+/**
+ * The consent record for a cloned voice (only the team's own enrolled voices may be
+ * cloned). Empty for a stock voice; a consent.json next to the voice sample is the other
+ * place the same record may live.
+ */
+export interface VoiceConsent {
+  /** whose voice this is */
+  owner_name: string;
+  /** who recorded the consent */
+  consented_by: string;
+  /** ISO 8601 date-time, or null */
+  consented_at: string | null;
+  /** the text the owner agreed to */
+  statement: string;
+}
+
 export interface VoiceConfig {
   tool: VoiceTool;
   /** clone link or voice id */
@@ -154,6 +170,7 @@ export interface VoiceConfig {
   returns_word_timestamps: boolean | null;
   api_key_env: string;
   monthly_budget_characters: number | null;
+  consent: VoiceConsent;
 }
 
 export interface ImageConfig {
@@ -278,6 +295,10 @@ export function defaultFramework(): Framework {
   return { type: "other", name: "", path: "", version: "", formats: "both", notes: "" };
 }
 
+export function defaultVoiceConsent(): VoiceConsent {
+  return { owner_name: "", consented_by: "", consented_at: null, statement: "" };
+}
+
 export function defaultVoiceConfig(): VoiceConfig {
   return {
     tool: "other",
@@ -291,6 +312,7 @@ export function defaultVoiceConfig(): VoiceConfig {
     returns_word_timestamps: null,
     api_key_env: "",
     monthly_budget_characters: null,
+    consent: defaultVoiceConsent(),
   };
 }
 
