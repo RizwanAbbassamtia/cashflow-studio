@@ -21,7 +21,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
 from . import __version__
-from .api import channels, doctor, system
+from .api import channels, doctor, jobs, projects, research, system, ws
 from .api import settings as settings_api
 from .config import Settings, load_settings
 from .origin_guard import SameOriginGuard
@@ -87,6 +87,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(doctor.router, prefix="/api")
     app.include_router(settings_api.router, prefix="/api")
     app.include_router(channels.router, prefix="/api")
+    app.include_router(research.router)
+    app.include_router(projects.router)
+    app.include_router(jobs.router)
+    app.include_router(ws.router)
 
     dist = frontend_dist_dir()
     if dist is not None:
