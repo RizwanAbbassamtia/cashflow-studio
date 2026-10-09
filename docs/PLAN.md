@@ -30,13 +30,13 @@ Guiding rules:
 | Backend language | Python 3.12 (FastAPI, SQLite, FFmpeg, yt-dlp) | pipeline, providers and rendering are Python-native; team already runs Python tools |
 | Front end | TypeScript + React + Vite, Tailwind, shown in a native WebView2 window (pywebview) | the Nexlev-grade dashboard and the CapCut-like timeline are browser technology; a Python-only UI cannot reach that quality. You lifted the Python-only rule, so the UI uses the right tool |
 | Editor | Own timeline JSON is the source of truth; FFmpeg renders it; built-in "CapCut-lite" editor for the common 80% of fixes; one-click hand-off to Kdenlive (free), DaVinci Resolve (FCPXML) and CapCut (draft export, best effort) for anything deeper | a full CapCut-class editor is a 2-4 developer-year product; the hybrid gives a real editor without that cost |
-| LLM | Claude API with each user's own API key, stored locally. Opus 5.5 for scripts and titles, Sonnet 5.5 for storyboard, SEO, image QA, Haiku for bulk | Anthropic's help centre (updated 2026-10-07) says Max plans now include a monthly API credit ($100 on Max 5x, $200 on Max 20x). If that holds in the Console, LLM cost per video is covered: roughly $0.30-0.60 per 10-minute video on Opus, far less on Sonnet. Two fallbacks: drive the pipeline from Claude Desktop/Code through a local MCP server, or a local model (Ollama) for drafts |
+| LLM | Claude API with each user's own API key, stored locally. Opus 5.5 for scripts and titles, Sonnet 5.5 for storyboard, SEO, image QA, Haiku for bulk | Anthropic's help centre (updated 2026-10-07) says Max plans now include a monthly API credit ($100 on Max 5x, $200 on Max 20x). If that holds in the Console, LLM cost per video is covered: roughly $0.30-0.60 per 10-minute video on Opus, far less on Sonnet. Fallback for Pro-only users: drive the pipeline from Claude Desktop/Code through a local MCP server. No local-model mode: the laptops have no GPUs |
 | Competitor data | yt-dlp on each user's laptop, two-tier fetching, SQLite cache | no API key needed; verified on this machine (450 videos listed in 12 s); residential IPs avoid bot checks |
-| Voice | Pluggable `VoiceProvider` with normalised word timings. First adapter = the team's own voice-clone tool (to be named). Ready adapters: MiniMax, Cartesia, Inworld (all return word timestamps), Fish Audio (no timestamps), local Chatterbox/Qwen3-TTS. WhisperX forced alignment when the tool gives no timestamps | ElevenLabs excluded by you; Play.ht is dead, Hume shuts down Nov 2026, Resemble withdrew public pricing, so the design must not depend on one vendor |
+| Voice | Pluggable `VoiceProvider` with normalised word timings. First adapter = the team's own voice-clone tool (to be named). Ready adapters: MiniMax, Cartesia, Inworld (all return word timestamps), Fish Audio (no timestamps). Forced alignment (WhisperX on CPU) exists only as a slow fallback that runs in the background; no local TTS models | ElevenLabs excluded by you; Play.ht is dead, Hume shuts down Nov 2026, Resemble withdrew public pricing, so the design must not depend on one vendor. Team laptops have no GPUs (confirmed 2026-10-09), so tools with native word timestamps are strongly preferred |
 | Images | Pluggable `ImageProvider`. Default Google Nano Banana 2.1 (Gemini API, 16:9 and 9:16 native, ~$0.034/image, up to 14 reference images); thumbnails on Nano Banana Pro or GPT Image 2.5; FLUX, Ideogram, Recraft as options. Google Flow has no API: manual import only | Imagen 4 was retired in Aug 2026; the market changes every few months, so adapters, not hard-coding |
 | On-image text | Images are generated text-free; popups, callouts, arrows are drawn by the app (Pillow, Noto fonts) as editable timeline layers | model-rendered body text is unreliable, and overlays stay editable and translatable |
-| Transitions | Claude picks a transition per cut from FFmpeg's xfade library plus motion-continuity rules; optional frame-interpolated morphs (FILM/RIFE) on GPU machines | smooth, varied cuts without manual work, and visual variety is now a monetisation requirement |
-| Output | Presets 720p, 1080p, 4K. Images generated at 2K where the provider supports it; 4K via local upscaling (Real-ESRGAN when a GPU exists, Lanczos otherwise) | you asked for 720/1080 with 4K |
+| Transitions | Claude picks a transition per cut from FFmpeg's xfade library (about 50 types) plus motion-continuity rules (zoom direction carried across the cut, no repeats, duration matched to the narration beat). Frame-interpolated morphs need a GPU and are out of scope for the team laptops | smooth, varied cuts without manual work, and visual variety is now a monetisation requirement |
+| Output | Presets 720p, 1080p, 4K. Images are requested at the provider's largest size (2K or 4K where supported) and scaled with Lanczos in FFmpeg; no local AI upscaler, since the laptops have no GPUs | you asked for 720/1080 with 4K |
 | Shared master data | A shared Google Drive folder, synced to every laptop with Google Drive for desktop, holds channel configs, frameworks, style references, voice samples, music, thumbnail templates. GitHub holds code only. Heavy per-video media stays on each user's local drive | non-developers do not use git; Drive sync is free, works offline, and already fits how the team shares files |
 | Distribution | Reuse the SceneForge method: self-contained Python runtime + setup EXE built with PyInstaller + GitHub Releases manifest (sha256) + in-app auto-update. Bundle FFmpeg (BtbN build), Deno (for yt-dlp), Noto fonts, WebView2 bootstrapper | proven with your 20-editor team already |
 | Languages | v1 order: English, Spanish, Hindi, Arabic (MSA), Portuguese (BR), Indonesian, Japanese, German, French, Russian; next: Vietnamese, Turkish, Korean | built from YouTube audience by country (DataReportal 2025-2026). Russian has near-zero ad yield; ship only with a non-AdSense plan |
@@ -178,14 +178,15 @@ One pull request per milestone.
 
 ## 9. Open questions (answer when convenient; M0 does not depend on them)
 
-1. Which voice-clone tool and which image tool does the team pay for, and do they have an API? This sets the first adapters.
+1. Which voice-clone tool and which image tool does the team pay for, and do they have an API? This sets the first adapters. (You said you will share them.)
 2. Which Claude plan do users have (Max 5x, Max 20x, Pro)? Max plans carry the monthly API credit; Pro users would use the MCP mode.
 3. Which Google account owns the shared Drive folder, and is Google Drive for desktop installed on the laptops?
-4. Do the laptops have NVIDIA GPUs and how much RAM? This decides local alignment, upscaling and morph transitions.
+4. How much RAM do the laptops have? (GPUs: none, confirmed 2026-10-09.)
 5. Which CapCut version is installed (for the draft export)?
 6. For Tier B languages: native scripts per language, or English master plus auto-dub?
 7. Arabic: Modern Standard Arabic or a dialect?
-8. Confirm the repository name `cashflow-studio`.
+
+Answered: repository is `RizwanAbbassamtia/cashflow-studio` (created 2026-10-09); team laptops have no GPUs.
 
 ## 10. Fact-check corrections folded in (2026-10-09, second pass)
 
