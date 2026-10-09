@@ -14,10 +14,14 @@ import { Badge } from "../ui/Badge";
 import { Card } from "../ui/Card";
 import { LoadingBlock } from "../ui/Spinner";
 import { ErrorState, Notice } from "../ui/States";
+import { EditReview } from "./EditReview";
+import { ExportReview } from "./ExportReview";
+import { ImagesReview } from "./ImagesReview";
 import { ResearchReview } from "./ResearchReview";
 import { ScriptReview } from "./ScriptReview";
 import { StoryboardBoard } from "./StoryboardBoard";
 import { TitleReview } from "./TitleReview";
+import { VoiceReview } from "./VoiceReview";
 
 export interface ReviewPanelProps {
   projectId: string;
@@ -72,6 +76,14 @@ function StageBody({ project, stage }: { project: Project; stage: StageName }) {
       return <ScriptReview projectId={project.id} />;
     case "storyboard":
       return <StoryboardBoard projectId={project.id} />;
+    case "voice":
+      return <VoiceReview projectId={project.id} />;
+    case "images":
+      return <ImagesReview projectId={project.id} />;
+    case "edit":
+      return <EditReview projectId={project.id} />;
+    case "export":
+      return <ExportReview projectId={project.id} />;
     default:
       return null;
   }
