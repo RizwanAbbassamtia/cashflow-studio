@@ -51,6 +51,7 @@ export const FRAMEWORK_TYPES = [
 export type FrameworkType = (typeof FRAMEWORK_TYPES)[number];
 
 export const VOICE_TOOLS = [
+  "ai33",
   "minimax",
   "cartesia",
   "inworld",

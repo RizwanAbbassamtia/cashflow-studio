@@ -58,6 +58,11 @@ class ProviderCapabilities(BaseModel):
         description="request recipe for the generic HTTP adapter (url, method, headers, "
         "body_template, response); see config/providers.yaml",
     )
+    options: dict[str, Any] = Field(
+        default={},
+        description="adapter-specific settings from config/providers.yaml (ai33: poll_paths, "
+        "poll_interval_s, poll_timeout_s, voice_providers, default_voice_prefix); never keys",
+    )
 
 
 class VoiceInfo(BaseModel):
@@ -67,6 +72,8 @@ class VoiceInfo(BaseModel):
     is_clone: bool = False
     preview_url: str = ""
     description: str = ""
+    gender: str = ""
+    tags: list[str] = []
 
 
 class CloneConsent(BaseModel):

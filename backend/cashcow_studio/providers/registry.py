@@ -2,7 +2,11 @@
 
 Selection: ``CCS_VOICE_PROVIDER`` and ``CCS_IMAGE_PROVIDER`` (environment), else a
 ``voice_provider`` / ``image_provider`` attribute on the settings object if one exists, else
-``mock``. Tests set nothing and get the mocks, so they never touch the network.
+``mock``. Tests set nothing and get the mocks, so they never touch the network. For the
+voice stage, :func:`voice_provider_for_channel` adds one more step (docs/M3-M4-CONTRACT.md
+section 1): when nothing names a provider, a channel whose Voice tab picks ai33 gets the
+ai33 adapter, so choosing it in Channel Setup is enough. Other tools with an adapter
+(``minimax``, ``cartesia``) run only when ``CCS_VOICE_PROVIDER`` names them.
 
 ``build_providers`` never raises: an unknown or not-yet-built provider becomes an
 "unavailable" stand-in whose calls raise :class:`ProviderNotConfigured` with a plain
@@ -65,9 +69,12 @@ VOICE_ADAPTERS: dict[str, Callable[..., VoiceProvider]] = {
 
 
 def wired_by_config(capabilities: ProviderCapabilities | None) -> bool:
-    """True when the catalogue entry carries an ``http`` recipe with a URL: such a tool (the
-    ai33 stub once its API is known) runs through the generic HTTP adapter without code."""
+    """True when the catalogue entry carries an ``http`` recipe with a URL: such a tool runs
+    through the generic HTTP adapter without code (an override even for ai33, which has
+    its own adapter)."""
     return bool(capabilities and str((capabilities.http or {}).get("url") or "").strip())
+
+
 IMAGE_ADAPTERS: dict[str, Callable[..., ImageProvider]] = {
     MockImageProvider.id: MockImageProvider,
     GeminiImageProvider.id: GeminiImageProvider,
@@ -218,6 +225,54 @@ def build_voice_provider(
         return UnavailableVoiceProvider(chosen, reason, "fail", capabilities)
 
 
+_channel_voice_providers: dict[str, VoiceProvider] = {}
+
+CHANNEL_VOICE_TOOLS: tuple[str, ...] = (Ai33VoiceProvider.id,)
+"""Voice tools a channel's Voice tab selects by itself when no app-wide voice provider is
+named (docs/M3-M4-CONTRACT.md section 1). Only ai33: a channel saved earlier with another
+tool that has an adapter (``minimax``, ``cartesia``) keeps the offline mock until
+``CCS_VOICE_PROVIDER`` names that tool, so it never starts paid calls without notice."""
+
+
+def voice_choice_is_explicit(settings: Any = None) -> bool:
+    """True when ``CCS_VOICE_PROVIDER`` (or a settings ``voice_provider``) names a provider."""
+    env = os.environ.get(ENV_VARS["voice"], "")
+    attr = getattr(settings, "voice_provider", None)
+    return bool(env.strip()) or (isinstance(attr, str) and bool(attr.strip()))
+
+
+def voice_provider_for_channel(current: Any, tool: str, settings: Any = None) -> Any:
+    """The provider the voice stage uses for a channel whose Voice tab names ``tool``.
+
+    Only a tool in :data:`CHANNEL_VOICE_TOOLS` (``ai33``) is picked up from the channel, and
+    only while the stage holds the default mock that nothing chose: then its adapter is
+    built once, kept for later runs (it remembers things such as the ai33 task-status path)
+    and returned. An app-wide choice always wins (``CCS_VOICE_PROVIDER`` or a settings
+    ``voice_provider``, even ``mock``); the stage warns about the mismatch only when that
+    choice is a real tool, not the mock. Every other tool (``minimax``, ``cartesia``,
+    ``fish_audio``, ``other``) keeps the current provider. Never raises.
+    """
+    wanted = (tool or "").strip().lower()
+    current_id = str(getattr(current, "id", "") or "")
+    if wanted not in CHANNEL_VOICE_TOOLS or wanted == current_id:
+        return current
+    if current is not None and (
+        current_id != DEFAULT_PROVIDER or voice_choice_is_explicit(settings)
+    ):
+        return current
+    provider = _channel_voice_providers.get(wanted)
+    if provider is None:
+        provider = build_voice_provider(wanted, settings)
+        _channel_voice_providers[wanted] = provider
+    return provider
+
+
+def reset_channel_voice_providers() -> None:
+    """Forget the per-channel adapters (used by tests). The app keeps them until it
+    restarts, so a change to ``config/providers.yaml`` needs a restart to reach them."""
+    _channel_voice_providers.clear()
+
+
 def build_image_provider(
     name: str | None = None, settings: Any = None, catalog: ProviderCatalog | None = None
 ) -> ImageProvider:
@@ -293,10 +348,19 @@ def _safe_health(provider: Any, kind: ProviderKind, provider_id: str) -> Provide
         )
 
 
+def _key_values(capabilities: Any) -> list[str]:
+    """The values of the keys a provider uses (only to scrub them out of a detail)."""
+    names = [getattr(capabilities, "key_env", "") or ""]
+    names.extend(getattr(capabilities, "extra_key_envs", None) or [])
+    return [os.environ.get(name, "") for name in names if name]
+
+
 def list_provider_status(settings: Any = None) -> list[ProviderStatus]:
     """Every known voice and image provider with its state; the selected ones are flagged.
 
-    Local facts only (keys present, software installed): nothing calls the network.
+    Local facts only (keys present, software installed): nothing calls the network. (The
+    one opt-in exception is ai33 with ``options.health_probe: true``, which then asks ai33
+    at most once a minute per key.) No detail ever carries a key value.
     """
     catalog = load_catalog()
     rows: list[ProviderStatus] = []
@@ -310,6 +374,9 @@ def list_provider_status(settings: Any = None) -> list[ProviderStatus]:
             else:
                 provider = build_image_provider(provider_id, catalog=catalog)
             health = _safe_health(provider, kind, provider_id)
+            detail = health.detail
+            for secret in _key_values(capabilities):
+                detail = scrub_secret(detail, secret)
             rows.append(
                 ProviderStatus(
                     kind=kind,
@@ -318,7 +385,7 @@ def list_provider_status(settings: Any = None) -> list[ProviderStatus]:
                     selected=provider_id == selected,
                     adapter=capabilities.adapter,
                     status=health.status,
-                    detail=health.detail,
+                    detail=detail,
                     key_env=health.key_env or capabilities.key_env,
                     key_set=health.key_set or key_is_set(capabilities.key_env),
                     model=health.model,

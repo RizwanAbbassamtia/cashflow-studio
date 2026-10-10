@@ -15,7 +15,13 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
-from .registry import ProviderStatus, list_provider_status
+from .registry import (
+    CHANNEL_VOICE_TOOLS,
+    DEFAULT_PROVIDER,
+    ProviderStatus,
+    list_provider_status,
+    voice_choice_is_explicit,
+)
 
 log = logging.getLogger(__name__)
 
@@ -123,6 +129,20 @@ def _map_registry_row(row: ProviderStatus) -> PipelineProviderStatus:
     )
 
 
+def _channel_voice_note(rows: list[ProviderStatus], settings: Any) -> str:
+    """While the voice part is the default mock that nothing chose, a channel whose Voice tab
+    picks ai33 still runs on ai33 (registry.voice_provider_for_channel); say so on the row."""
+    if voice_choice_is_explicit(settings):
+        return ""
+    names = [
+        row.name for row in rows
+        if row.kind == "voice" and row.id in CHANNEL_VOICE_TOOLS and row.adapter == "ready"
+    ]
+    if not names:
+        return ""
+    return f" Channels whose Voice tab picks {' or '.join(names)} use that tool instead."
+
+
 def pipeline_provider_status(settings: Any = None) -> list[PipelineProviderStatus]:
     """The four rows (llm, research, image, voice) the Settings card shows. Never raises."""
     rows: list[PipelineProviderStatus] = []
@@ -139,14 +159,18 @@ def pipeline_provider_status(settings: Any = None) -> list[PipelineProviderStatu
                 )
             )
     try:
-        selected = [row for row in list_provider_status(settings) if row.selected]
+        every_row = list_provider_status(settings)
+        selected = [row for row in every_row if row.selected]
     except Exception:  # noqa: BLE001
         log.exception("Image/voice provider status failed")
-        selected = []
+        every_row, selected = [], []
     for kind_name in ("image", "voice"):
         matching = [row for row in selected if row.kind == kind_name]
         if matching:
-            rows.append(_map_registry_row(matching[0]))
+            mapped = _map_registry_row(matching[0])
+            if kind_name == "voice" and matching[0].id == DEFAULT_PROVIDER:
+                mapped.detail += _channel_voice_note(every_row, settings)
+            rows.append(mapped)
         else:
             rows.append(
                 PipelineProviderStatus(

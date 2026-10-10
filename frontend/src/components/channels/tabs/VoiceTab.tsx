@@ -8,6 +8,7 @@ import { Field, FieldGrid, FormSection } from "../../ui/Field";
 import { Input, Select, Textarea } from "../../ui/Input";
 
 const VOICE_TOOL_LABELS: Record<VoiceTool, string> = {
+  ai33: "ai33 (OpenSpeaker)",
   minimax: "MiniMax",
   cartesia: "Cartesia",
   inworld: "Inworld",
@@ -53,8 +54,8 @@ export function VoiceTab({ form }: { form: UseFormReturn<ChannelFormValues> }) {
           <Field label="Voice name" htmlFor="voice.name" hint="A name you recognise, for example Daniel - warm narrator">
             <Input id="voice.name" placeholder="Daniel - warm narrator" {...register("voice.name")} />
           </Field>
-          <Field label="Clone link or voice id" htmlFor="voice.clone_ref" className="md:col-span-2" hint="The link or id of the voice in the tool, not an API key.">
-            <Input id="voice.clone_ref" placeholder="https://fish.audio/m/..." spellCheck={false} {...register("voice.clone_ref")} />
+          <Field label="Clone link or voice id" htmlFor="voice.clone_ref" className="md:col-span-2" hint="The link or id of the voice in the tool, not an API key. For ai33: clone_123 for your own clone, or a stock voice id such as minimax_... or elevenlabs_...">
+            <Input id="voice.clone_ref" placeholder="clone_123" spellCheck={false} {...register("voice.clone_ref")} />
           </Field>
           <Field label="Language" htmlFor="voice.language">
             <Select id="voice.language" {...register("voice.language")}>
@@ -122,8 +123,8 @@ export function VoiceTab({ form }: { form: UseFormReturn<ChannelFormValues> }) {
 
       <FormSection title="Account" description="Keys themselves are entered once in Settings. Here you only name the key to use.">
         <FieldGrid>
-          <Field label="API key name" htmlFor="voice.api_key_env" error={e?.api_key_env?.message} hint="The key's name in Settings, like FISH_AUDIO_API_KEY. Never the key itself.">
-            <Input id="voice.api_key_env" list="known-keys-voice" className="font-mono" placeholder="FISH_AUDIO_API_KEY" spellCheck={false} autoComplete="off" invalid={Boolean(e?.api_key_env)} {...register("voice.api_key_env")} />
+          <Field label="API key name" htmlFor="voice.api_key_env" error={e?.api_key_env?.message} hint="The key's name in Settings, like AI33_API_KEY. Never the key itself.">
+            <Input id="voice.api_key_env" list="known-keys-voice" className="font-mono" placeholder="AI33_API_KEY" spellCheck={false} autoComplete="off" invalid={Boolean(e?.api_key_env)} {...register("voice.api_key_env")} />
             <KnownKeysDatalist id="known-keys-voice" />
           </Field>
           <Field label="Monthly budget (characters)" htmlFor="voice.monthly_budget_characters" error={e?.monthly_budget_characters?.message} hint="Optional. The app warns when the channel gets close.">

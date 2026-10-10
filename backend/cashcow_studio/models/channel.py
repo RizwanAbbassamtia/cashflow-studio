@@ -30,7 +30,8 @@ FrameworkType = Literal[
     "other",
 ]
 VoiceTool = Literal[
-    "minimax", "cartesia", "inworld", "fish_audio", "azure", "google", "local", "other",
+    "ai33", "minimax", "cartesia", "inworld", "fish_audio", "azure", "google", "local",
+    "other",
 ]
 ImageTool = Literal[
     "google_gemini", "openai", "flux_bfl", "flux_fal", "flux_replicate", "ideogram",

@@ -87,6 +87,7 @@ KNOWN_KEYS: tuple[str, ...] = (
     "FAL_KEY",
     "REPLICATE_API_TOKEN",
     "IDEOGRAM_API_KEY",
+    "AI33_API_KEY",
     "MINIMAX_API_KEY",
     "MINIMAX_GROUP_ID",
     "CARTESIA_API_KEY",
@@ -96,6 +97,7 @@ KNOWN_KEYS: tuple[str, ...] = (
     "AZURE_SPEECH_REGION",
 )
 VOICE_KEYS: tuple[str, ...] = (
+    "AI33_API_KEY",
     "MINIMAX_API_KEY",
     "CARTESIA_API_KEY",
     "INWORLD_API_KEY",

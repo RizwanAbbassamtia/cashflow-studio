@@ -1,4 +1,4 @@
-"""Provider interfaces: the offline mocks, the registry defaults, the ai33 stub, the catalogue
+"""Provider interfaces: the offline mocks, the registry defaults, ai33 without a key, the catalogue
 and the Gemini adapter importing without credentials. Nothing here touches the network."""
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ from cashcow_studio.providers.image.gemini import (
     first_image_part,
 )
 from cashcow_studio.providers.image.mock import MockImageProvider
-from cashcow_studio.providers.voice.ai33 import AI33_PENDING, Ai33VoiceProvider
+from cashcow_studio.providers.voice.ai33 import Ai33VoiceProvider
 from cashcow_studio.providers.voice.base import (
     CloneConsent,
     SynthRequest,
@@ -257,32 +257,34 @@ def test_registry_unknown_provider_does_not_raise(
         voice.synthesize(SynthRequest(text="Hello", output_path=tmp_path / "v.wav"))
 
 
-# ai33 stub ----------------------------------------------------------------------------------
+# ai33 without a key -------------------------------------------------------------------------
 
 
-def test_ai33_stub_message(no_provider_env: None, tmp_path: Path) -> None:
+def test_ai33_without_a_key_explains_what_to_do(no_provider_env: None, tmp_path: Path) -> None:
     provider = registry.build_voice_provider("ai33")
     assert isinstance(provider, Ai33VoiceProvider)
     assert isinstance(provider, VoiceProvider)
 
     with pytest.raises(ProviderNotConfigured) as excinfo:
-        provider.synthesize(SynthRequest(text="Hello there", output_path=tmp_path / "a.wav"))
-    assert str(excinfo.value).startswith("ai33: API details pending")
-    assert str(excinfo.value) == AI33_PENDING
+        provider.synthesize(
+            SynthRequest(text="Hello there", output_path=tmp_path / "a.wav", voice_id="clone_1")
+        )
+    assert "Add your ai33 API key" in str(excinfo.value)
     with pytest.raises(ProviderNotConfigured):
         provider.list_voices()
     with pytest.raises(ProviderNotConfigured):
-        provider.estimate_cost("x")
-    with pytest.raises(ProviderNotConfigured):
         provider.create_clone("v", [], consent())
+    estimate = provider.estimate_cost("x" * 10)  # needs no key: credits, 0 USD
+    assert estimate.unit == "credit" and estimate.cost_usd == 0 and estimate.units == 10
+    assert "credits" in estimate.note
 
     caps = provider.capabilities  # from config/providers.yaml
-    assert caps.id == "ai33" and caps.adapter == "stub" and caps.clone is True
-    assert caps.key_env == "AI33_API_KEY"
+    assert caps.id == "ai33" and caps.adapter == "ready" and caps.clone is True
+    assert caps.key_env == "AI33_API_KEY" and caps.billing_unit == "credit"
     health = provider.health()
     assert health.status == "not_configured"
     assert health.key_set is False
-    assert health.detail == AI33_PENDING
+    assert "Add your ai33 API key" in health.detail
 
 
 # Gemini adapter -----------------------------------------------------------------------------
@@ -392,7 +394,7 @@ def test_catalog_loads_repo_yaml() -> None:
     assert gemini.max_reference_images == 14
     assert catalog.voice["minimax"].adapter == "ready"
     assert catalog.voice["inworld"].adapter == "planned"
-    assert catalog.voice["ai33"].adapter == "stub"
+    assert catalog.voice["ai33"].adapter == "ready"
 
 
 def test_catalog_falls_back_without_file(tmp_path: Path) -> None:

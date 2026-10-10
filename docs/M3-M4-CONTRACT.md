@@ -18,6 +18,9 @@ code second.
    fall back to sentence-level timing; never require WhisperX (optional adapter only).
 5. **Keys stay in `.env`.** The ai33 voice tool is still unspecified: keep the stub and add a
    configurable generic HTTP adapter so it can be wired without code once its API is known.
+   *Update 2026-10-10: the ai33 (OpenSpeaker) API v3 is known and `providers/voice/ai33.py`
+   is a real adapter (task-based synthesis, voices, cloning; see `docs/providers/ai33.md`).
+   The generic HTTP adapter stays as the no-code override (`voice.ai33.http` in the catalogue).*
 
 ## 1. Voice stage (`pipeline/stages/voice.py`, `providers/voice/*`, `audio/*`)
 
@@ -57,7 +60,12 @@ Behaviour:
   warnings. Edits on approve: `{re_record: [sentence_ids]}` (re-synthesise only those),
   `{audio_path}` (use own recording), `{timing: TimingDoc}` (manual nudges).
 
-Providers (`providers/voice/`): keep `base.py`, `mock.py`, `ai33.py` (stub). Add
+Providers (`providers/voice/`): keep `base.py`, `mock.py`, `ai33.py` (a stub until
+2026-10-10, now the real ai33 adapter; `channel.voice.tool == "ai33"` selects it when no
+`CCS_VOICE_PROVIDER` is set, and the Settings voice row says so while the app-wide choice is
+the default mock. Only ai33 is selected from the channel this way: `minimax` and `cartesia`
+run only when `CCS_VOICE_PROVIDER` names them, so channels saved with them keep the offline
+mock). Add
 `minimax.py` and `cartesia.py` (real adapters following their public REST docs, word timestamps
 on, untestable without keys, must import without them), and `generic_http.py`: a provider
 driven entirely by `config/providers.yaml` (`url`, `method`, `headers` with `${ENV}` expansion,

@@ -26,24 +26,40 @@ voice:
     notes: "Writes silent audio with evenly spaced word timings. For tests and demos."
 
   ai33:
-    name: "ai33 voice clone"
-    adapter: stub
+    name: "ai33 (OpenSpeaker)"
+    adapter: ready
     clone: true
-    languages: []            # unknown until the documentation arrives
-    timestamp_granularity: unknown
-    billing_unit: character
-    price_per_unit_usd: 0    # unknown
-    max_chars: null
+    languages: ["English", "Spanish", "Hindi", "Arabic", "Portuguese", "Indonesian", "Japanese", "German", "French", "Russian", "Vietnamese"]
+    timestamp_granularity: sentence   # becomes word when the task transcript carries per-word times
+    billing_unit: credit
+    price_per_unit_usd: 0    # billed in ai33 credits; the dollar price depends on the plan
+    max_chars: 1000000       # the API limit per request; the app still sends one sentence at a time
     key_env: AI33_API_KEY
-    docs_url: ""
-    notes: "The team's own voice tool, named 2026-10-09. Website and API documentation still needed. Once known, fill in the http section below (same shape as generic_http) and the app calls it without a code change."
-    # To connect ai33 without code, uncomment and fill in this recipe (see generic_http):
-    # http:
-    #   url: "https://api.ai33.example/v1/tts"
-    #   method: POST
-    #   headers: {Authorization: "Bearer ${AI33_API_KEY}", Content-Type: application/json}
-    #   body_template: {text: "{{text}}", voice_id: "{{voice}}", language: "{{language}}", speed: "{{speed}}"}
-    #   response: {kind: json, audio_field: audio, audio_encoding: base64, audio_format: mp3, word_timings_path: words, word_fields: {text: word, start: start, end: end}, time_unit: s}
+    base_url: "https://api.ai33.pro"
+    docs_url: "https://ai33.pro/app/api-document"
+    notes: "The team's own voice tool (OpenSpeaker API v3): ElevenLabs, MiniMax, Fish, Vbee, Edge and Kokoro voices plus the team's clones (voice ids clone_<id>). API keys need a paid ai33 plan. Details and open questions: docs/providers/ai33.md."
+    verified_on: "2026-10-10"
+    options:
+      default_voice_prefix: clone_   # a bare id in the channel ("123") is sent as clone_123
+      voice_providers: [clone, elevenlabs, minimax, fishaudio, vbee]   # engines listed under Voices
+      # The task-status endpoint is on the "Common" tab of the API document, which needs a
+      # login. These paths are tried in order on the first poll (up to 4 passes); the first
+      # one whose answer is about the task (it repeats the task id, has a status word such
+      # as processing/completed/failed, or links to the audio) is kept until the app
+      # restarts, or until it stops answering about tasks. Put the confirmed path first,
+      # then restart the app.
+      poll_paths:
+        - "/v3/tasks/{task_id}"
+        - "/v3/task/{task_id}"
+        - "/v3/common/task/{task_id}"
+        - "/v3/common/tasks/{task_id}"
+        - "/common/task?task_id={task_id}"
+      poll_interval_s: 1.5     # first wait between two polls; grows by half each time
+      poll_max_interval_s: 5
+      poll_timeout_s: 180      # give up on one sentence after this many seconds (at most 3600)
+      health_probe: false      # true: the Settings page asks ai33 (GET /v3/voices, at most once a minute per key) whether it accepts the key
+    # An http recipe here (same shape as generic_http below) switches ai33 to the generic
+    # adapter instead of its own; normally not needed.
 
   generic_http:
     # Template for any voice tool with a plain HTTP API. Copy this block under a new id (or

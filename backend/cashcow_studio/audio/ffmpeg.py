@@ -177,6 +177,53 @@ def convert_to_wav(
     return dest
 
 
+def convert_to_mp3(
+    source: Path | str,
+    dest: Path | str,
+    *,
+    bitrate_kbps: int = 96,
+    sample_rate: int | None = None,
+    channels: int = DEFAULT_CHANNELS,
+    cancel: threading.Event | None = None,
+) -> Path:
+    """Any audio (or video) file -> MP3 at ``bitrate_kbps`` (mono by default), for uploads
+    with a size limit such as a voice-clone sample. ``sample_rate`` ``None`` keeps the
+    source rate. ``cancel`` works as in :func:`convert_to_wav`."""
+    source, dest = Path(source), Path(dest)
+    if not source.is_file():
+        raise AudioError(f"The audio file {source} does not exist.")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    tmp = dest.with_name(dest.name + ".part.mp3")
+    command = [
+        ffmpeg_path(),
+        "-y",
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-nostdin",
+        "-i",
+        str(source),
+        "-vn",
+        "-map_metadata",
+        "-1",
+        "-ac",
+        str(channels),
+    ]
+    if sample_rate:
+        command += ["-ar", str(sample_rate)]
+    command += ["-c:a", "libmp3lame", "-b:a", f"{int(bitrate_kbps)}k", "-f", "mp3", str(tmp)]
+    try:
+        _run(command, f"Converting {source.name} to MP3", cancel)
+        os.replace(tmp, dest)
+    finally:
+        if tmp.exists():
+            try:
+                tmp.unlink()
+            except OSError:
+                pass
+    return dest
+
+
 def probe_duration(path: Path | str) -> float:
     """Duration in seconds as ffprobe reports it (works for any container)."""
     path = Path(path)

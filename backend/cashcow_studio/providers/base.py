@@ -23,7 +23,7 @@ ProviderKind = Literal["voice", "image"]
 AdapterState = Literal["ready", "stub", "planned"]
 """``ready`` works; ``stub`` exists but waits for API details; ``planned`` arrives later."""
 HealthStatus = Literal["ok", "warn", "fail", "not_configured", "planned"]
-BillingUnit = Literal["character", "second", "image", "request", "free"]
+BillingUnit = Literal["character", "second", "image", "request", "credit", "free"]
 
 
 class ProviderError(Exception):

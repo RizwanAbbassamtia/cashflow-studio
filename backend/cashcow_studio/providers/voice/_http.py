@@ -99,19 +99,28 @@ def download(
     raise ProviderError(f"The link {url} redirected more than {max_redirects} times.")
 
 
+ERROR_BODY_SCAN_CHARS = 1_000_000
+"""How much of an error body is searched for key values before it is cut for a message."""
+ERROR_DETAIL_CHARS = 300
+
+
 def explain_http_error(exc: Exception, tool_name: str, secrets: list[str]) -> str:
-    """A plain-English message for a failed request, with every key value scrubbed."""
+    """A plain-English message for a failed request, with every key value scrubbed.
+
+    The body is scrubbed first and cut afterwards: cutting first could split a key that
+    sits across the cut, and the half that stays would no longer match."""
     status = getattr(getattr(exc, "response", None), "status_code", None)
     text = ""
     response = getattr(exc, "response", None)
     if response is not None:
         try:
-            text = str(response.text or "")[:300]
+            text = str(response.text or "")[:ERROR_BODY_SCAN_CHARS]
         except Exception:  # noqa: BLE001
             text = ""
-    detail = text or str(exc)
+    detail = text or str(exc) or type(exc).__name__
     for secret in secrets:
         detail = scrub_secret(detail, secret)
+    detail = detail[:ERROR_DETAIL_CHARS]
     if status in (401, 403):
         return f"{tool_name} rejected the API key ({status}). Check it in Settings > API keys."
     if status == 429:

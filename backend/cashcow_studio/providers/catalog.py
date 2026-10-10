@@ -61,7 +61,7 @@ class ProviderCatalog(BaseModel):
 
 
 def builtin_catalog() -> ProviderCatalog:
-    """What the app knows without any file: the mocks, the ai33 stub and the Gemini adapter."""
+    """What the app knows without any file: the mocks, the ai33 adapter and the Gemini adapter."""
     return ProviderCatalog(
         voice={
             mock_voice.MOCK_ID: mock_voice.default_capabilities(),

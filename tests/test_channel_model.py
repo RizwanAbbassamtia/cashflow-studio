@@ -30,9 +30,10 @@ def test_example_yaml_loads_into_channel() -> None:
     assert [c.name for c in channel.competitors] == ["Human Ember", "The Gentle Hour"]
     assert channel.competitors[1].priority == 2
     assert [f.type for f in channel.frameworks] == ["title", "script_long"]
-    assert channel.voice.tool == "fish_audio"
-    assert channel.voice.api_key_env == "FISH_AUDIO_API_KEY"
-    assert channel.voice.returns_word_timestamps is False
+    assert channel.voice.tool == "ai33"
+    assert channel.voice.clone_ref == "clone_123"
+    assert channel.voice.api_key_env == "AI33_API_KEY"
+    assert channel.voice.returns_word_timestamps is None
     assert channel.images.tool == "google_gemini"
     assert channel.images.on_image_text == "app_popups"
     assert channel.thumbnail.max_headline_words == 4

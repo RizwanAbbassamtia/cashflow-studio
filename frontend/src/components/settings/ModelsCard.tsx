@@ -71,7 +71,7 @@ function providersFromKeys(settings: Settings | undefined, research: ResearchPro
     detail: has(name) ? `${name} is set.` : `Add ${name} under API keys.`,
   });
   const imageKeys = ["GEMINI_API_KEY", "OPENAI_API_KEY", "FAL_KEY", "REPLICATE_API_TOKEN", "IDEOGRAM_API_KEY"];
-  const voiceKeys = ["MINIMAX_API_KEY", "CARTESIA_API_KEY", "INWORLD_API_KEY", "FISH_AUDIO_API_KEY", "AZURE_SPEECH_KEY"];
+  const voiceKeys = ["AI33_API_KEY", "MINIMAX_API_KEY", "CARTESIA_API_KEY", "INWORLD_API_KEY", "FISH_AUDIO_API_KEY", "AZURE_SPEECH_KEY"];
   const imageSet = imageKeys.filter(has);
   const voiceSet = voiceKeys.filter(has);
   return [

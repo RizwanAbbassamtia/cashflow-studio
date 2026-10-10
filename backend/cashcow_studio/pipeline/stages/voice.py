@@ -572,7 +572,20 @@ def _provider(ctx: StageContext) -> Any:
     provider = ctx.providers.get("voice")
     if provider is None:
         raise StageError("No voice tool is set up. Check Settings > Models and providers.")
-    return provider
+    return _for_channel(ctx, provider)
+
+
+def _for_channel(ctx: StageContext, provider: Any) -> Any:
+    """The channel's own voice tool when its Voice tab picks ai33 (the only tool selected
+    this way, registry.CHANNEL_VOICE_TOOLS) and the app-wide choice is the default mock; an
+    explicit ``CCS_VOICE_PROVIDER`` keeps ``provider``."""
+    try:
+        from ...providers.registry import voice_provider_for_channel  # noqa: PLC0415
+
+        return voice_provider_for_channel(provider, ctx.channel.voice.tool, ctx.settings)
+    except Exception:  # noqa: BLE001 - never lose the run over the selection
+        log.exception("The channel's voice tool could not be selected; using the app-wide one")
+        return provider
 
 
 def resolve_audio_path(folder: Path, value: str) -> Path:

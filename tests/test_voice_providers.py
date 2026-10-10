@@ -374,7 +374,7 @@ def test_generic_unconfigured_entry(no_keys: None, tmp_path: Path) -> None:
     assert catalog.voice["minimax"].adapter == "ready"
     assert catalog.voice["minimax"].default_model == "speech-2.8-hd"
     assert catalog.voice["cartesia"].adapter == "ready"
-    assert catalog.voice["ai33"].adapter == "stub" and not catalog.voice["ai33"].http
+    assert catalog.voice["ai33"].adapter == "ready" and not catalog.voice["ai33"].http
 
 
 def test_generic_synthesize_json_audio_field(

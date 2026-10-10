@@ -49,16 +49,16 @@ frameworks:
     formats: long
 
 voice:
-  tool: fish_audio               # fish_audio | minimax | cartesia | playai | resemble | azure | google | hume | local | other
-  clone_ref: https://fish.audio/m/xxxxxxxxxxxxxxxx   # clone link or voice ID
+  tool: ai33                     # ai33 | minimax | cartesia | inworld | fish_audio | azure | google | local | other
+  clone_ref: clone_123           # ai33 voice id: clone_<id> for the team's own clone (a bare id "123" also works), or a stock voice such as minimax_<id>
   name: Daniel - warm narrator
   language: English
-  model: s1
-  speed: 1.0
+  model: ""                      # ai33 picks the engine from the voice id prefix; leave empty
+  speed: 1.0                     # ai33 accepts 0.5 to 1.5; faster is clamped
   style: calm, warm, slow at emotional moments
   sample_path: D:\CashCowStudio\voices\daniel-sample.mp3
-  returns_word_timestamps: false # if false the app aligns the audio with Whisper
-  api_key_env: FISH_AUDIO_API_KEY
+  returns_word_timestamps: null  # unknown until the first run: ai33 returns a transcript, word times depend on the engine
+  api_key_env: AI33_API_KEY      # the key itself lives in Settings > API keys
   monthly_budget_characters: 1000000
   consent:                       # required when clone_ref or sample_path is set (own voices only)
     owner_name: Daniel Example   # whose voice this is
